@@ -57,9 +57,6 @@ vim.pack.add({
 	{ src = gh("sindrets/diffview.nvim"), name = "diffview.nvim" },
 	{ src = gh("kdheepak/lazygit.nvim"), name = "lazygit.nvim" },
 
-	-- Autotag
-	{ src = gh("windwp/nvim-ts-autotag"), name = "nvim-ts-autotag" },
-
 	-- Formatting
 	{ src = gh("stevearc/conform.nvim"), name = "conform.nvim" },
 
