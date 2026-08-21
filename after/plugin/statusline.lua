@@ -1,23 +1,10 @@
 -- Native statusline: the 0.12 default expression (diagnostics, LSP progress,
--- terminal exit code, busy, ruler) with extra sections. Replaces mini.statusline.
+-- terminal exit code, busy, ruler) plus a mode chip and info sections
+-- (filetype, git branch/diff, search count, recording indicator). Colors are
+-- read from the active colorscheme on load and on every |ColorScheme|.
 --
--- Layout (left -> right):
+-- Layout:
 --   [MODE]▌ [filetype] ⎇ git-branch +a ~c -d   %f %m %r ... (0.12 default) ... [n/m] ● @q  12,8 45%
---
--- Theme-aware design
--- ------------------
--- Nothing is hardcoded: on load and on every |ColorScheme| we read the
--- *resolved* colors from the live colorscheme (`nvim_get_hl`) and build all
--- statusline groups from them.
---
---   mode chip  = accent bg (base group every scheme themes) + StatusLine-bg
---                text, with a half-block `▌` tail blending into the
---                StatusLine background (soft edge instead of a hard seam)
---   info text  = plain fg groups on the StatusLine bg, so the mode chip stays
---                the single loud element (hierarchy: chip > text)
---
--- Anchors are standard |group-name| groups (or universal `Diagnostic*`
--- groups), so this picks up kanagawa, gruvbox, tokyonight, … unchanged.
 --
 -- Notes:
 -- - The 0.12 default 'statusline' is already an expression; we prepend our

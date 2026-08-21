@@ -1,17 +1,8 @@
--- Native tag editing helpers — replaces nvim-ts-autotag.
+-- Native tag editing helpers: rename, close-on->, close-on-</.
 --
---  - Rename: `vim.lsp.linked_editing_range` gives live paired-tag renaming
---    where the server supports it (svelte, astro; html via html-ls). For
---    buffers without such a client (jsx/tsx: tsserver doesn't implement it;
---    html: no server configured), a treesitter fallback renames the paired
---    tag on InsertLeave.
---  - Close on `>`: typing the closing `>` of a start tag inserts `</name>`
---    unless the tag is void, self-closing, or already closed.
---  - Close on `</`: typing `</` completes the innermost open tag's name.
---
--- Treesitter-based, so it needs the parsers for the tag languages
--- (see `lua/plugins/treesitter.lua` -> `ensure_installed`); buffers without
--- a parser or a known grammar no-op.
+-- Rename via vim.lsp.linked_editing_range where the server supports it
+-- (svelte/astro); treesitter fallback on InsertLeave otherwise (jsx/tsx, html).
+-- Needs the parsers in lua/plugins/treesitter.lua ensure_installed.
 
 local api, ts = vim.api, vim.treesitter
 
