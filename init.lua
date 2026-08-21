@@ -36,7 +36,6 @@ vim.pack.add({
 
 	-- Diagnostics
 	{ src = gh("folke/trouble.nvim"), name = "trouble.nvim" },
-	{ src = gh("nvim-tree/nvim-web-devicons"), name = "nvim-web-devicons" },
 
 	-- Treesitter
 	{ src = gh("nvim-treesitter/nvim-treesitter"), name = "nvim-treesitter" },
