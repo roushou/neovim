@@ -4,13 +4,15 @@
 -- read from the active colorscheme on load and on every |ColorScheme|.
 --
 -- Layout:
---   [MODE]▌ [filetype] ⎇ git-branch +a ~c -d   %f %m %r ... (0.12 default) ... [n/m] ● @q  12,8 45%
+--   [MODE]▌ [filetype] ⎇ git-branch +a ~c -d   %f %m %r ... (0.12 default) ... ●clangd ●rust-analyzer [n/m] ● @q  12,8 45%
 --
 -- Notes:
 -- - The 0.12 default 'statusline' is already an expression; we prepend our
 --   left sections and splice our right sections just before the ruler.
 -- - `%{%...%}` re-evaluates the function result as a statusline format
 --   string, so the `%#Group#`/`%*` items we return take effect.
+-- - The LSP section lists clients attached to the active window; clicking it
+--   opens the :LspInfo overview (lua/lspinfo.lua).
 
 -- mode -> { label, anchor group, printable name (for hl group names) }
 local MODE = {
@@ -51,6 +53,7 @@ local function setup_hl()
 	vim.api.nvim_set_hl(0, "StatusLineFiletype", { fg = palette.ft })
 	vim.api.nvim_set_hl(0, "StatusLineSearch", { fg = palette.search })
 	vim.api.nvim_set_hl(0, "StatusLineRecording", { fg = palette.rec })
+	vim.api.nvim_set_hl(0, "StatusLineLsp", { fg = palette.lsp })
 end
 
 -- Read resolved colors from the active colorscheme. Runs on load and on
@@ -72,6 +75,7 @@ local function derive()
 	palette.ft = fg("Function") or palette.fg
 	palette.search = fg("Constant") or palette.fg
 	palette.rec = fg("Error") or palette.fg
+	palette.lsp = fg("DiagnosticOk") or fg("DiagnosticInfo") or palette.fg
 	setup_hl()
 end
 
@@ -175,8 +179,44 @@ function _G.StatuslineLeft()
 	return out .. " "
 end
 
+-- LSP clients attached to the active window, e.g. `● rust-analyzer ● clangd`.
+-- `●` connected, `◐` starting. Click (left) to open the :LspInfo overview.
+local LSP_MAX = 30
+local function lsp_section()
+	if not active() then
+		return ""
+	end
+	local clients = vim.lsp.get_clients({ bufnr = vim.api.nvim_get_current_buf(), _uninitialized = true })
+	if #clients == 0 then
+		return ""
+	end
+	local parts = {}
+	for _, c in ipairs(clients) do
+		parts[#parts + 1] = (c.initialized and "●" or "◐") .. " " .. c.name
+	end
+	local label = table.concat(parts, " ")
+	if #label > LSP_MAX then
+		label = label:sub(1, LSP_MAX - 1) .. "…"
+	end
+	return "%#StatusLineLsp#%@StatuslineLspClick@" .. label .. "%X%*"
+end
+
+function _G.StatuslineLspClick(...)
+	local button = select(3, ...)
+	if button ~= "l" then
+		return
+	end
+	vim.schedule(function()
+		require("lspinfo").open()
+	end)
+end
+
 function _G.StatuslineRight()
 	local parts = {}
+	local l = lsp_section()
+	if l ~= "" then
+		parts[#parts + 1] = l
+	end
 	local s = search_section()
 	if s ~= "" then
 		parts[#parts + 1] = s

@@ -232,3 +232,7 @@ vim.lsp.config("sourcekit", {
 	capabilities = blink_capabilities(),
 })
 vim.lsp.enable("sourcekit")
+
+-- LSP status overview (:LspInfo) — custom, no plugin
+require("lspinfo")
+map("n", "<leader>li", "<cmd>LspInfo<cr>")
