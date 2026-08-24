@@ -24,9 +24,6 @@ vim.pack.add({
 	{ src = gh("rafamadriz/friendly-snippets"), name = "friendly-snippets" },
 	{ src = gh("xzbdmw/colorful-menu.nvim"), name = "colorful-menu.nvim" },
 
-	-- Symbols / navigation
-	{ src = gh("bassamsdata/namu.nvim"), name = "namu.nvim" },
-
 	-- Rust
 	{
 		src = gh("mrcjkb/rustaceanvim"),

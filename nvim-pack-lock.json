@@ -54,10 +54,6 @@
       "src": "https://github.com/echasnovski/mini.nvim",
       "version": ">=0.0.0"
     },
-    "namu.nvim": {
-      "rev": "e7afbdf63a75ace6ccc6202d58a4f6f9ac09db92",
-      "src": "https://github.com/bassamsdata/namu.nvim"
-    },
     "neo-tree.nvim": {
       "rev": "84c75e7a7e443586f60508d12fc50f90d9aee14e",
       "src": "https://github.com/nvim-neo-tree/neo-tree.nvim",
