@@ -20,7 +20,19 @@ M.ensure_installed = {
 
 -- Filetypes for which treesitter highlighting + indentation will be enabled.
 -- These should match parser names (e.g. vimdoc → help filetype).
-M.filetypes = { "lua", "help", "rust", "go", "python", "svelte", "typescript", "odin" }
+M.filetypes = {
+	"lua",
+	"help",
+	"rust",
+	"go",
+	"python",
+	"svelte",
+	"typescript",
+	"typescriptreact",
+	"javascript",
+	"javascriptreact",
+	"odin",
+}
 
 -- Configuration for nvim-treesitter-textobjects.
 M.textobjects = {
