@@ -71,3 +71,11 @@ vim.api.nvim_create_user_command("Gdiff", function()
 	setup_diff_winbar(scratch_win)
 	setup_diff_winbar()
 end, {})
+
+-- Flash the yanked region (native |vim.hl.on_yank()|).
+vim.api.nvim_create_autocmd("TextYankPost", {
+	desc = "Highlight yanked text",
+	callback = function()
+		vim.hl.on_yank({ higroup = "IncSearch", timeout = 300 })
+	end,
+})
