@@ -76,6 +76,9 @@ vim.pack.add({
 
 require("lsp")
 
+-- keyd: keymap-reveal plugin (own code)
+require("keyd")
+
 -- Treesitter
 local ts = require("plugins.treesitter")
 require("nvim-treesitter").setup({})
