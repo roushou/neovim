@@ -1,34 +1,7 @@
-local map = require("util").map
+--- LSP server configurations for |vim.lsp.config()| / |vim.lsp.enable()|.
+--- Pure data: no autocmds, keymaps or UI. Loaded by lsp/init.lua.
 
--- Global LSP handler overrides (set once, not per-attach)
-vim.lsp.handlers["textDocument/hover"] = function(_, result, ctx, config)
-	config = vim.tbl_deep_extend("force", config or {}, { border = "single", title = "hover" })
-	vim.lsp.handlers.hover(_, result, ctx, config)
-end
-vim.lsp.handlers["textDocument/signatureHelp"] = function(_, result, ctx, config)
-	config = vim.tbl_deep_extend("force", config or {}, { border = "single" })
-	vim.lsp.handlers.signature_help(_, result, ctx, config)
-end
-
-vim.api.nvim_create_autocmd("LspAttach", {
-	callback = function(args)
-		local client = vim.lsp.get_client_by_id(args.data.client_id)
-		client.server_capabilities.semanticTokensProvider = nil
-
-		if client.server_capabilities.hoverProvider then
-			map("n", "K", vim.lsp.buf.hover, { buffer = args.buf })
-		end
-
-		map("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<cr>", { buffer = args.buf })
-		if vim.bo[args.buf].filetype == "rust" then
-			map("n", "<leader>ca", function()
-				vim.cmd.RustLsp("codeAction")
-			end, { buffer = args.buf })
-		else
-			map("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<cr>", { buffer = args.buf })
-		end
-	end,
-})
+local M = {}
 
 local function blink_capabilities()
 	return require("blink.cmp").get_lsp_capabilities()
@@ -233,6 +206,4 @@ vim.lsp.config("sourcekit", {
 })
 vim.lsp.enable("sourcekit")
 
--- LSP status overview (:LspInfo) — custom, no plugin
-require("lspinfo")
-map("n", "<leader>li", "<cmd>LspInfo<cr>")
+return M

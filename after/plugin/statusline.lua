@@ -12,7 +12,7 @@
 -- - `%{%...%}` re-evaluates the function result as a statusline format
 --   string, so the `%#Group#`/`%*` items we return take effect.
 -- - The LSP section lists clients attached to the active window; clicking it
---   opens the :LspInfo overview (lua/lspinfo.lua).
+--   opens the :LspInfo overview (lua/lsp/info.lua).
 
 -- mode -> { label, anchor group, printable name (for hl group names) }
 local MODE = {
@@ -207,7 +207,7 @@ function _G.StatuslineLspClick(...)
 		return
 	end
 	vim.schedule(function()
-		require("lspinfo").open()
+		require("lsp.info").open()
 	end)
 end
 
