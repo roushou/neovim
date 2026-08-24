@@ -70,13 +70,13 @@ vim.lsp.config("ruff", {
 })
 vim.lsp.enable("ruff")
 
-vim.lsp.config("ts_ls", {
-	cmd = { "typescript-language-server", "--stdio" },
+vim.lsp.config("vtsls", {
+	cmd = { "vtsls", "--stdio" },
 	filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
 	root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
 	capabilities = blink_capabilities(),
 })
-vim.lsp.enable("ts_ls")
+vim.lsp.enable("vtsls")
 
 vim.lsp.config("tailwindcss", {
 	cmd = { "@tailwindcss/language-server", "--stdio" },
