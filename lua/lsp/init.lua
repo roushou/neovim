@@ -11,6 +11,6 @@ require("lsp.keys")
 require("lsp.info")
 
 -- LSP status overview (:LspInfo) — custom, no plugin
-map("n", "<leader>li", "<cmd>LspInfo<cr>")
+map("n", "<leader>li", "<cmd>LspInfo<cr>", { desc = "LSP info" })
 
 return M

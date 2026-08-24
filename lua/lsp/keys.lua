@@ -10,16 +10,21 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		client.server_capabilities.semanticTokensProvider = nil
 
 		if client.server_capabilities.hoverProvider then
-			map("n", "K", vim.lsp.buf.hover, { buffer = args.buf })
+			map("n", "K", vim.lsp.buf.hover, { buffer = args.buf, desc = "Hover" })
 		end
 
-		map("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<cr>", { buffer = args.buf })
+		map("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<cr>", { buffer = args.buf, desc = "Rename symbol" })
 		if vim.bo[args.buf].filetype == "rust" then
 			map("n", "<leader>ca", function()
 				vim.cmd.RustLsp("codeAction")
-			end, { buffer = args.buf })
+			end, { buffer = args.buf, desc = "Code action (rust)" })
 		else
-			map("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<cr>", { buffer = args.buf })
+			map(
+				"n",
+				"<leader>ca",
+				"<cmd>lua vim.lsp.buf.code_action()<cr>",
+				{ buffer = args.buf, desc = "Code action" }
+			)
 		end
 	end,
 })

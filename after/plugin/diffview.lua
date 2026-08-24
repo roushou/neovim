@@ -20,4 +20,4 @@ vim.keymap.set("n", "<leader>gv", function()
 	else
 		vim.cmd("DiffviewClose")
 	end
-end)
+end, { desc = "Toggle diffview" })
