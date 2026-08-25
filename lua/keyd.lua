@@ -214,11 +214,11 @@ local function exec()
 	vim.schedule(function()
 		in_exec = false
 	end)
-	pcall(vim.keymap.del, "n", vim.fn.keytrans(trigger), { buffer = buf_id })
+	pcall(vim.keymap.del, "n", vim.fn.keytrans(trigger), { buf = buf_id })
 	vim.api.nvim_feedkeys(keys, "mit", false)
 	vim.schedule(function()
 		map("n", vim.fn.keytrans(trigger), trigger_rhs(trigger), {
-			buffer = buf_id,
+			buf = buf_id,
 			nowait = true,
 			desc = "Keyd: " .. vim.fn.keytrans(trigger),
 		})
@@ -314,7 +314,7 @@ local function map_triggers(buf)
 	end
 	for _, t in ipairs(TRIGGERS) do
 		map("n", vim.fn.keytrans(t), trigger_rhs(t), {
-			buffer = buf,
+			buf = buf,
 			nowait = true,
 			desc = "Keyd: " .. vim.fn.keytrans(t),
 		})

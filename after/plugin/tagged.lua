@@ -399,7 +399,7 @@ local function attach(buf)
 		end
 		-- Cursor sits right after the `>` (inside the tag) in every case.
 		api.nvim_win_set_cursor(0, { row, col + 1 })
-	end, { buffer = buf, noremap = true, silent = true })
+	end, { buf = buf, noremap = true, silent = true })
 
 	vim.keymap.set("i", "/", function()
 		local row, col = unpack(api.nvim_win_get_cursor(0))
@@ -411,11 +411,11 @@ local function attach(buf)
 		end
 		-- After `</name>` the cursor is before the `>`; otherwise after the `/`.
 		api.nvim_win_set_cursor(0, { row, col + 1 + inserted })
-	end, { buffer = buf, noremap = true, silent = true })
+	end, { buf = buf, noremap = true, silent = true })
 
 	api.nvim_create_autocmd("InsertLeave", {
 		group = group,
-		buffer = buf,
+		buf = buf,
 		callback = function()
 			rename_tags(buf)
 		end,

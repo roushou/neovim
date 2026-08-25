@@ -335,14 +335,14 @@ local function action_jump()
 end
 
 local function setup_keymaps(buf)
-	map("n", "q", close, { buffer = buf })
-	map("n", "<Esc>", close, { buffer = buf })
-	map("n", "r", action_restart, { buffer = buf })
-	map("n", "s", action_stop, { buffer = buf })
-	map("n", "e", action_enable, { buffer = buf })
-	map("n", "d", action_disable, { buffer = buf })
-	map("n", "<CR>", action_jump, { buffer = buf })
-	map("n", "R", render, { buffer = buf })
+	map("n", "q", close, { buf = buf })
+	map("n", "<Esc>", close, { buf = buf })
+	map("n", "r", action_restart, { buf = buf })
+	map("n", "s", action_stop, { buf = buf })
+	map("n", "e", action_enable, { buf = buf })
+	map("n", "d", action_disable, { buf = buf })
+	map("n", "<CR>", action_jump, { buf = buf })
+	map("n", "R", render, { buf = buf })
 end
 
 function M.open()
