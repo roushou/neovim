@@ -46,9 +46,6 @@ vim.pack.add({
 	{ src = gh("sindrets/diffview.nvim"), name = "diffview.nvim" },
 	{ src = gh("kdheepak/lazygit.nvim"), name = "lazygit.nvim" },
 
-	-- Formatting
-	{ src = gh("stevearc/conform.nvim"), name = "conform.nvim" },
-
 	-- Search & replace
 	{ src = gh("nvim-pack/nvim-spectre"), name = "nvim-spectre" },
 
@@ -70,6 +67,9 @@ require("keyd")
 
 -- Custom buffer tabline (own bufferline.nvim replacement)
 require("tabline")
+
+-- own formatter runner (conform.nvim replacement)
+require("format").attach()
 
 -- Treesitter
 local ts = require("plugins.treesitter")

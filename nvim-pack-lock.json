@@ -9,10 +9,6 @@
       "rev": "13f9b7eaa9cd2901b4f8915cfb2483c3be4c8c20",
       "src": "https://github.com/xzbdmw/colorful-menu.nvim"
     },
-    "conform.nvim": {
-      "rev": "18aeab3d63d350dcf44d64c462cc489a3412af40",
-      "src": "https://github.com/stevearc/conform.nvim"
-    },
     "diffview.nvim": {
       "rev": "4516612fe98ff56ae0415a259ff6361a89419b0a",
       "src": "https://github.com/sindrets/diffview.nvim"
