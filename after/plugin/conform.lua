@@ -9,6 +9,6 @@ require("conform").setup({
 vim.api.nvim_create_autocmd("BufWritePre", {
 	pattern = { "*.lua", "*.rs", "*.odin" },
 	callback = function(args)
-		require("conform").format({ bufnr = args.buf })
+		require("conform").format({ bufnr = args.buf, lsp_format = "fallback" })
 	end,
 })
