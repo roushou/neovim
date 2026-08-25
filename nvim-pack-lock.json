@@ -63,10 +63,6 @@
       "rev": "de740991c12411b663994b2860f1a4fd0937c130",
       "src": "https://github.com/MunifTanjim/nui.nvim"
     },
-    "nvim-lsp-endhints": {
-      "rev": "a86e7ca7a92ef003008d7eb5d153c63bcc89f79c",
-      "src": "https://github.com/chrisgrieser/nvim-lsp-endhints"
-    },
     "nvim-spectre": {
       "rev": "72f56f7585903cd7bf92c665351aa585e150af0f",
       "src": "https://github.com/nvim-pack/nvim-spectre"

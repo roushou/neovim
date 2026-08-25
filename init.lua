@@ -12,9 +12,6 @@ vim.pack.add({
 	-- Mini plugins
 	{ src = gh("echasnovski/mini.nvim"), name = "mini.nvim", version = vim.version.range("*") },
 
-	-- LSP
-	{ src = gh("chrisgrieser/nvim-lsp-endhints"), name = "nvim-lsp-endhints" },
-
 	-- Completion
 	{
 		src = gh("saghen/blink.cmp"),

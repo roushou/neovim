@@ -10,6 +10,7 @@ require("lsp.handlers")
 require("lsp.keys")
 require("lsp.info")
 require("lsp.pick")
+require("lsp.endhints")
 
 -- LSP status overview (:LspInfo) — custom, no plugin
 map("n", "<leader>li", "<cmd>LspInfo<cr>", { desc = "LSP info" })
