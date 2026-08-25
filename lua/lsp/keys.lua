@@ -10,7 +10,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		client.server_capabilities.semanticTokensProvider = nil
 
 		if client.server_capabilities.hoverProvider then
-			map("n", "K", vim.lsp.buf.hover, { buffer = args.buf, desc = "Hover" })
+			map("n", "K", function()
+				vim.lsp.buf.hover({ border = "single", title = "hover" })
+			end, { buffer = args.buf, desc = "Hover" })
 		end
 
 		map("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<cr>", { buffer = args.buf, desc = "Rename symbol" })

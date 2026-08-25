@@ -104,7 +104,18 @@ local function refresh_handler(_, result, ctx)
 	end
 end
 
-vim.lsp.handlers["textDocument/inlayHint"] = refresh_handler
+vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
+	group = vim.api.nvim_create_augroup("lsp_endhints", { clear = true }),
+	callback = function(ctx)
+		local client = vim.lsp.get_client_by_id(ctx.data.client_id)
+		if not client or not client.server_capabilities.inlayHintProvider then
+			return
+		end
+		-- per-client handler override (vim.lsp.handlers table is deprecated)
+		client.handlers["textDocument/inlayHint"] = refresh_handler
+		vim.lsp.inlay_hint.enable(ctx.event == "LspAttach", { bufnr = ctx.buf })
+	end,
+})
 
 -- Keep the namespace in sync when hints are toggled natively
 -- (per-filetype overrides in settings.lua call this).

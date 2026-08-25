@@ -6,7 +6,6 @@ local map = require("util").map
 local M = {}
 
 require("lsp.setup")
-require("lsp.handlers")
 require("lsp.keys")
 require("lsp.info")
 require("lsp.pick")
