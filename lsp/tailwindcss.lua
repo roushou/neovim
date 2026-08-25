@@ -1,0 +1,30 @@
+--- tailwindcss language server configuration for |vim.lsp.config()|.
+return {
+	cmd = { "tailwindcss-language-server", "--stdio" },
+	filetypes = {
+		"html",
+		"css",
+		"scss",
+		"javascript",
+		"javascriptreact",
+		"typescript",
+		"typescriptreact",
+		"svelte",
+		"vue",
+		"astro",
+		"markdown",
+		"mdx",
+		"heex",
+		"elixir",
+		"php",
+		"erb",
+		"templ",
+	},
+	root_markers = {
+		"tailwind.config.js",
+		"tailwind.config.ts",
+		"tailwind.config.mjs",
+		"tailwind.config.cjs",
+		".git",
+	},
+}
