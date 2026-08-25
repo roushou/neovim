@@ -7,6 +7,7 @@ local M = {}
 
 require("lsp.setup")
 require("lsp.keys")
+require("lsp.highlight").setup()
 require("lsp.info")
 require("lsp.pick")
 require("lsp.endhints")
