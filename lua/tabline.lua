@@ -122,13 +122,18 @@ function M.render()
 	return table.concat(parts)
 end
 
---- Click handler: left = switch, middle = close (refuses modified buffers).
+--- Click handler: left = focus, middle = close (refuses modified buffers).
 function M.click(bufnr, _, button)
 	if not vim.api.nvim_buf_is_valid(bufnr) then
 		return
 	end
 	if button == "l" then
-		vim.cmd.buffer(bufnr)
+		-- focus the buffer in the current window; if it's not listed anywhere
+		-- yet (e.g. [No Name] scratch), show it explicitly first
+		if vim.fn.buflisted(bufnr) == 0 then
+			vim.bo[bufnr].buflisted = true
+		end
+		vim.api.nvim_set_current_buf(bufnr)
 	elseif button == "m" then
 		if vim.bo[bufnr].modified then
 			vim.notify("Buffer modified", vim.log.levels.WARN)
@@ -161,10 +166,21 @@ function M.cycle(dir)
 	vim.cmd.buffer(buffers[next_idx])
 end
 
--- globals referenced by the 'tabline' expression and click labels
+-- globals referenced by the 'tabline' expression and click labels.
+-- Click labels (%N@Func@) resolve a VIMSCRIPT function name, so a thin
+-- wrapper forwards to the Lua handler.
 _G.TablineRender = M.render
 _G.TablineClick = M.click
+vim.fn.execute([[
+	function! TablineClick(minwid, clicks, button, modifiers) abort
+		return v:lua.require('tabline').click(a:minwid, a:clicks, a:button, a:modifiers)
+	endfunction
+]])
 
+-- required for click labels (%N@Func@) to receive mouse events at all
+if vim.o.mouse == "" then
+	vim.o.mouse = "a"
+end
 vim.o.showtabline = 2
 vim.o.tabline = "%{%v:lua.TablineRender()%}"
 
