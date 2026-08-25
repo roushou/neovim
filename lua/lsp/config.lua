@@ -79,7 +79,7 @@ vim.lsp.config("vtsls", {
 vim.lsp.enable("vtsls")
 
 vim.lsp.config("tailwindcss", {
-	cmd = { "@tailwindcss/language-server", "--stdio" },
+	cmd = { "tailwindcss-language-server", "--stdio" },
 	filetypes = {
 		"html",
 		"css",
@@ -145,7 +145,7 @@ vim.lsp.config("svelte", {
 vim.lsp.enable("svelte")
 
 vim.lsp.config("jsonls", {
-	cmd = { "vscode-json-languageserver", "--stdio" },
+	cmd = { "vscode-json-language-server", "--stdio" },
 	filetypes = { "json", "jsonc" },
 	root_markers = { ".git" },
 	capabilities = blink_capabilities(),
@@ -153,7 +153,7 @@ vim.lsp.config("jsonls", {
 vim.lsp.enable("jsonls")
 
 vim.lsp.config("cssls", {
-	cmd = { "vscode-css-languageserver", "--stdio" },
+	cmd = { "vscode-css-language-server", "--stdio" },
 	filetypes = { "css", "scss", "less" },
 	root_markers = { "package.json", ".git" },
 	capabilities = blink_capabilities(),
