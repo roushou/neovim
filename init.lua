@@ -37,12 +37,7 @@ vim.pack.add({
 	{ src = gh("nvim-treesitter/nvim-treesitter-context"), name = "nvim-treesitter-context" },
 
 	-- UI
-	{ src = gh("akinsho/bufferline.nvim"), name = "bufferline.nvim" },
-	{
-		src = gh("nvim-neo-tree/neo-tree.nvim"),
-		name = "neo-tree.nvim",
-		version = "v3.x",
-	},
+	{ src = gh("nvim-neo-tree/neo-tree.nvim"), name = "neo-tree.nvim", version = "v3.x" },
 	{ src = gh("nvim-lua/plenary.nvim"), name = "plenary.nvim" },
 	{ src = gh("MunifTanjim/nui.nvim"), name = "nui.nvim" },
 
@@ -72,6 +67,9 @@ require("lsp")
 
 -- keyd: keymap-reveal plugin (own code)
 require("keyd")
+
+-- Custom buffer tabline (own bufferline.nvim replacement)
+require("tabline")
 
 -- Treesitter
 local ts = require("plugins.treesitter")

@@ -5,10 +5,6 @@
       "src": "https://github.com/saghen/blink.cmp",
       "version": "1.0.0 - 2.0.0"
     },
-    "bufferline.nvim": {
-      "rev": "655133c3b4c3e5e05ec549b9f8cc2894ac6f51b3",
-      "src": "https://github.com/akinsho/bufferline.nvim"
-    },
     "colorful-menu.nvim": {
       "rev": "13f9b7eaa9cd2901b4f8915cfb2483c3be4c8c20",
       "src": "https://github.com/xzbdmw/colorful-menu.nvim"
