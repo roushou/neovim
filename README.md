@@ -72,6 +72,8 @@ It's registered and enabled automatically. Shared defaults (completion capabilit
 | `H` / `L`     | Previous / next buffer    |
 | `<leader>x`   | Close buffer              |
 | `<leader>li`  | LSP info                  |
+| `<leader>ss`  | LSP symbols (document)    |
+| `\`          | LSP workspace symbols     |
 | `<C-h/j/k/l>` | Navigate windows          |
 
 # License
