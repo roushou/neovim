@@ -73,7 +73,7 @@ It's registered and enabled automatically. Shared defaults (completion capabilit
 | `<leader>x`   | Close buffer              |
 | `<leader>li`  | LSP info                  |
 | `<leader>ss`  | LSP symbols (document)    |
-| `\`          | LSP workspace symbols     |
+| `<leader>sw`  | LSP workspace symbols     |
 | `<C-h/j/k/l>` | Navigate windows          |
 
 # License
