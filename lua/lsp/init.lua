@@ -1,17 +1,13 @@
---- LSP entry point: loads config, handlers, keys and the :LspInfo UI.
-
-local map = require("util").map
+--- LSP entry point: loads the server loader, buffer keymaps and the LSP
+--- features (document highlight, :LspInfo, symbol pickers, inlay hints).
 
 local M = {}
 
 require("lsp.setup")
 require("lsp.keys")
-require("lsp.highlight").setup()
-require("lsp.info")
-require("lsp.pick")
-require("lsp.endhints")
-
--- LSP status overview (:LspInfo) — custom, no plugin
-map("n", "<leader>li", "<cmd>LspInfo<cr>", { desc = "LSP info" })
+require("lsp.features.highlight").setup()
+require("lsp.features.info")
+require("lsp.features.pick")
+require("lsp.features.endhints")
 
 return M

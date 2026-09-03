@@ -47,7 +47,7 @@ lua/
 ├── tagged.lua      tag close/rename helpers
 ├── format.lua      format-on-save via external binaries
 ├── filetypes.lua   per-filetype defaults (indent, detection)
-├── lsp/            LSP machinery: loader, keys, handlers, :LspInfo, pickers
+├── lsp/            LSP core (loader, keys) + features (info, pickers, hints)
 ├── ui/             UI helpers (theme, float, hl, status) + diagnostic float
 └── plugins/
     └── treesitter.lua  parsers + textobjects setup

@@ -24,6 +24,15 @@ map("n", "L", function()
 end, { desc = "Next buffer" })
 map("n", "<leader>x", "<cmd>lua MiniBufremove.delete()<cr>", { desc = "Close buffer" })
 
+-- LSP
+map("n", "<leader>li", "<cmd>LspInfo<cr>", { desc = "LSP info" })
+map("n", "<leader>ss", function()
+	require("lsp.features.pick").doc_symbols()
+end, { desc = "LSP symbols" })
+map("n", "<leader>sw", function()
+	require("lsp.features.pick").workspace_symbols()
+end, { desc = "LSP workspace symbols" })
+
 -- Visual
 map("v", "<", "<gv", { desc = "Indent out" })
 map("v", ">", ">gv", { desc = "Indent in" })
