@@ -140,7 +140,7 @@ vim.lsp.inlay_hint.enable = function(enable, filter)
 end
 
 -- Auto-enable hints for inlayHint-capable clients (mirrors the plugin's
--- autoEnableHints; per-filetype overrides in settings.lua still apply).
+-- autoEnableHints; per-filetype overrides below still apply).
 vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
 	group = vim.api.nvim_create_augroup("lsp_endhints", { clear = true }),
 	callback = function(ctx)
@@ -149,6 +149,18 @@ vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
 			return
 		end
 		vim.lsp.inlay_hint.enable(ctx.event == "LspAttach", { bufnr = ctx.buf })
+	end,
+})
+
+-- Per-filetype hint defaults (rust disables, cpp enables).
+local FILETYPE_HINTS = {
+	rust = false,
+	cpp = true,
+}
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = { "rust", "cpp" },
+	callback = function(ev)
+		vim.lsp.inlay_hint.enable(FILETYPE_HINTS[ev.match])
 	end,
 })
 

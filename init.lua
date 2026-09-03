@@ -1,4 +1,6 @@
 require("settings")
+require("ui.diag_float")
+require("filetypes")
 require("keymaps")
 require("plugins")
 

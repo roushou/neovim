@@ -42,8 +42,9 @@ lua/
 ├── keyd.lua        keymap-reveal helper
 ├── tabline.lua     buffer tabline
 ├── format.lua      format-on-save via external binaries
+├── filetypes.lua   per-filetype defaults (indent, detection)
 ├── lsp/            LSP machinery: loader, keys, handlers, :LspInfo, pickers
-├── ui/             shared UI helpers: theme colors, floats, extmarks, status strings
+├── ui/             UI helpers (theme, float, hl, status) + diagnostic float
 └── plugins/
     └── treesitter.lua  parsers + textobjects setup
 lsp/                declarative server configs — one file per LSP (data only)
