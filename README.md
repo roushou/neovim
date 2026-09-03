@@ -27,12 +27,12 @@ git clone https://github.com/roushou/neovim.git ~/.config/nvim
 nvim
 ```
 
-Plugins are declared in [`init.lua`](./init.lua) via the built-in `vim.pack.add()` and pinned in [`nvim-pack-lock.json`](./nvim-pack-lock.json); run `:vim.pack.update()` to update.
+Plugins are declared in [`lua/plugins/init.lua`](./lua/plugins/init.lua) via the built-in `vim.pack.add()` and pinned in [`nvim-pack-lock.json`](./nvim-pack-lock.json); run `:vim.pack.update()` to update.
 
 ## Layout
 
 ```
-init.lua            entry point: plugin declarations + module wiring
+init.lua            entry point: module wiring
 nvim-pack-lock.json pinned plugin revisions
 after/plugin/       per-plugin config (blink, gitsigns, kanagawa, neo-tree, …)
 lua/
