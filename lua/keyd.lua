@@ -10,6 +10,9 @@
 --- while letting the real mapping run.
 
 local map = require("util").map
+local theme = require("ui.theme")
+local float = require("ui.float")
+local hl = require("ui.hl")
 
 local M = {}
 
@@ -48,7 +51,7 @@ local function getchar()
 		0,
 		50,
 		vim.schedule_wrap(function()
-			if state and state.win and vim.api.nvim_win_is_valid(state.win) then
+			if float.is_open(state) then
 				vim.cmd("redraw")
 			end
 		end)
@@ -61,16 +64,11 @@ end
 -- persistent timer for the show delay (works while getcharstr is blocking)
 local show_timer = vim.loop.new_timer()
 
-local function setup_hl()
-	vim.api.nvim_set_hl(0, "KeydNextKey", {
-		fg = vim.api.nvim_get_hl(0, { name = "Function" }).fg or 0xffffff,
-		bold = true,
-	})
-	vim.api.nvim_set_hl(0, "KeydDesc", {
-		fg = vim.api.nvim_get_hl(0, { name = "Comment" }).fg or 0xaaaaaa,
-	})
+local function refresh()
+	vim.api.nvim_set_hl(0, "KeydNextKey", { fg = theme.fg("Function", 0xffffff), bold = true })
+	vim.api.nvim_set_hl(0, "KeydDesc", { fg = theme.fg("Comment", 0xaaaaaa) })
 end
-vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_hl })
+theme.on_colorscheme(refresh)
 
 --- Mappings for a buffer, keyed by raw lhs (buffer-local wins over global).
 local function clues_get_all(buf_id)
@@ -105,16 +103,12 @@ local function filter_clues(buf_id, query)
 end
 
 local function close_window()
-	if state and state.win and vim.api.nvim_win_is_valid(state.win) then
-		vim.api.nvim_win_close(state.win, true) -- bufhidden=wipe cleans the buffer
-	end
+	float.close(state) -- bufhidden=wipe cleans the buffer
 	state.win, state.buf = nil, nil
 end
 
 local function window_open()
-	local buf = vim.api.nvim_create_buf(false, true)
-	vim.bo[buf].bufhidden = "wipe"
-	local win = vim.api.nvim_open_win(buf, true, {
+	local f = float.open({
 		relative = "editor",
 		anchor = "SE",
 		-- row/col are offsets from the editor's TOP-LEFT; anchor="SE" places
@@ -124,17 +118,15 @@ local function window_open()
 		col = math.max(0, (vim.o.columns or 80) - 2),
 		width = 40,
 		height = 3,
-		border = "single",
 		title = " " .. vim.fn.keytrans(table.concat(state.query, "")) .. " ",
 		title_pos = "left",
 		noautocmd = true, -- don't fire BufEnter (trigger mapping autocmd) for the float
 	})
-	vim.wo[win].winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder"
-	state.win, state.buf = win, buf
+	state.win, state.buf = f.win, f.buf
 end
 
 local function render()
-	if not state or not state.win or not vim.api.nvim_win_is_valid(state.win) then
+	if not float.is_open(state) then
 		return
 	end
 	local win, buf = state.win, state.buf
@@ -169,14 +161,14 @@ local function render()
 
 	local width = math.min(72, math.max(#lines[1] or 20, 24), (vim.o.columns or 80) - 4)
 	local height = math.min(#lines, 16)
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+	float.set_lines(state, lines)
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 	for i, r in ipairs(rows) do
 		local k = vim.fn.keytrans(r.rest)
 		if #k > maxk then
 			k = k:sub(1, maxk - 1) .. "…"
 		end
-		vim.api.nvim_buf_set_extmark(buf, ns, i - 1, 1, { hl_group = "KeydNextKey", end_col = 1 + #k })
+		hl.range(buf, ns, i - 1, 1, 1 + #k, "KeydNextKey")
 	end
 	vim.api.nvim_win_set_config(win, {
 		relative = "editor",
@@ -234,7 +226,7 @@ trigger_rhs = function(trigger)
 		if vim.bo.filetype == "ministarter" then
 			return
 		end
-		setup_hl()
+		refresh()
 
 		local buf_id = vim.api.nvim_get_current_buf()
 		state = { query = { trigger }, buf_id = buf_id, trigger = trigger, win = nil, buf = nil }
@@ -246,7 +238,7 @@ trigger_rhs = function(trigger)
 			SHOW_DELAY,
 			0,
 			vim.schedule_wrap(function()
-				if state and not state.win then
+				if state and not float.is_open(state) then
 					window_open()
 					render()
 				end
@@ -262,7 +254,7 @@ trigger_rhs = function(trigger)
 				return
 			end
 			if key == CD or key == CU then
-				if state.win and vim.api.nvim_win_is_valid(state.win) then
+				if float.is_open(state) then
 					local n = vim.api.nvim_buf_line_count(state.buf)
 					local cur = vim.api.nvim_win_get_cursor(state.win)[1]
 					local step = key == CD and 5 or -5
@@ -296,7 +288,7 @@ trigger_rhs = function(trigger)
 				exec()
 				return
 			end
-			if state.win and vim.api.nvim_win_is_valid(state.win) then
+			if float.is_open(state) then
 				render()
 			end
 			::continue::

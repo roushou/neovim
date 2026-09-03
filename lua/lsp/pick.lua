@@ -15,6 +15,7 @@
 --- stays decoration-free (no icons/guides) so fuzzy matching ignores them.
 
 local map = require("util").map
+local hl = require("ui.hl")
 
 local M = {}
 
@@ -70,25 +71,13 @@ local function apply_symbol_decorations(buf_id, items)
 		if v then
 			if v.icon_hl and v.icon_text then
 				local col = v.icon_col or 0
-				vim.api.nvim_buf_set_extmark(buf_id, icon_ns, i - 1, col, {
-					hl_group = v.icon_hl,
-					end_col = col + #v.icon_text,
-					priority = 160,
-				})
+				hl.range(buf_id, icon_ns, i - 1, col, col + #v.icon_text, v.icon_hl, { priority = 160 })
 			end
 			if v.guide and #v.guide > 0 then
-				vim.api.nvim_buf_set_extmark(buf_id, dim_ns, i - 1, 0, {
-					end_col = #v.guide,
-					hl_group = "Comment",
-					priority = 150,
-				})
+				hl.range(buf_id, dim_ns, i - 1, 0, #v.guide, "Comment", { priority = 150 })
 			end
 			if v.dim_col then
-				vim.api.nvim_buf_set_extmark(buf_id, dim_ns, i - 1, v.dim_col, {
-					hl_eol = true,
-					hl_group = "Comment",
-					priority = 150,
-				})
+				hl.eol(buf_id, dim_ns, i - 1, v.dim_col, "Comment", { priority = 150 })
 			end
 		end
 	end
@@ -413,28 +402,11 @@ local function preview_symbol(buf_id, item)
 		highlight_preview(buf_id, ft)
 	end
 	vim.api.nvim_buf_clear_namespace(buf_id, preview_ns, 0, -1)
-	vim.api.nvim_buf_set_extmark(buf_id, preview_ns, 0, 0, {
-		end_row = 0,
-		end_col = 0,
-		hl_eol = true,
-		hl_group = "MiniPickHeader",
-		priority = 200,
-	})
-	vim.api.nvim_buf_set_extmark(buf_id, preview_ns, hl_row, 0, {
-		end_row = hl_row,
-		end_col = 0,
-		hl_eol = true,
-		hl_group = "MiniPickPreviewLine",
-		priority = 201,
-	})
+	hl.eol(buf_id, preview_ns, 0, 0, "MiniPickHeader", { priority = 200 })
+	hl.eol(buf_id, preview_ns, hl_row, 0, "MiniPickPreviewLine", { priority = 201 })
 	local col_start, col_end = preview_region_cols(buf_id, hl_row, v.range, v.offset_encoding or "utf-16")
 	if col_start then
-		vim.api.nvim_buf_set_extmark(buf_id, preview_ns, hl_row, col_start, {
-			end_row = hl_row,
-			end_col = col_end,
-			hl_group = "MiniPickPreviewRegion",
-			priority = 202,
-		})
+		hl.range(buf_id, preview_ns, hl_row, col_start, col_end, "MiniPickPreviewRegion", { priority = 202 })
 	end
 
 	-- Center the target line when the preview buffer is displayed.

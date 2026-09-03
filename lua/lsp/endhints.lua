@@ -6,6 +6,8 @@
 --- for inlayHint-capable clients on attach and keeps the namespace in sync
 --- with |vim.lsp.inlay_hint.enable()|.
 
+local hl = require("ui.hl")
+
 local M = {}
 
 local ns = vim.api.nvim_create_namespace("lsp_endhints")
@@ -94,13 +96,7 @@ local function refresh_handler(_, result, ctx)
 			return a.position.character < b.position.character
 		end)
 		local text = (" "):rep(PADDING) .. merge_hints(hints) .. (" "):rep(PADDING)
-		vim.api.nvim_buf_set_extmark(bufnr, ns, lnum, 0, {
-			virt_text = { { text, "LspInlayHint" } },
-			virt_text_pos = "eol",
-			hl_mode = "combine",
-			strict = false,
-			priority = PRIORITY,
-		})
+		hl.virt_text(bufnr, ns, lnum, text, "LspInlayHint", { strict = false, priority = PRIORITY })
 	end
 end
 

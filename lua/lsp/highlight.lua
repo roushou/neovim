@@ -2,6 +2,8 @@
 --- textDocument/documentHighlight (references in write access get
 --- LspReferenceWrite). Gated on the server's documentHighlightProvider.
 
+local theme = require("ui.theme")
+
 local M = {}
 
 local AUGROUP = vim.api.nvim_create_augroup("lsp_document_highlight", { clear = true })
@@ -25,8 +27,7 @@ local function capable(bufnr)
 end
 
 function M.setup()
-	ensure_highlights()
-	vim.api.nvim_create_autocmd("ColorScheme", { group = AUGROUP, callback = ensure_highlights })
+	theme.on_colorscheme(ensure_highlights)
 	vim.api.nvim_create_autocmd("LspAttach", {
 		group = AUGROUP,
 		callback = function(args)

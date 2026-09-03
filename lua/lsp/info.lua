@@ -14,6 +14,8 @@
 ---   q/<Esc>  close
 
 local map = require("util").map
+local float = require("ui.float")
+local hl = require("ui.hl")
 
 local M = {}
 
@@ -143,7 +145,7 @@ local function row_line(row)
 end
 
 local function render()
-	if not state or not vim.api.nvim_win_is_valid(state.win) then
+	if not float.is_open(state) then
 		return
 	end
 	local win, buf = state.win, state.buf
@@ -192,12 +194,13 @@ local function render()
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 	local height = math.min(#lines, math.max(4, (vim.o.lines or 24) - 10))
 	local width = math.min(FLOAT_WIDTH, (vim.o.columns or 80) - 4)
+	local pos = float.center(width, height)
 	vim.api.nvim_win_set_config(win, {
 		relative = "editor",
 		width = width,
 		height = height,
-		row = math.max(0, math.floor(((vim.o.lines or 24) - height) / 2)),
-		col = math.max(0, math.floor(((vim.o.columns or 80) - width) / 2)),
+		row = pos.row,
+		col = pos.col,
 	})
 
 	-- recolor: dot = state color, detail = dim
@@ -205,11 +208,8 @@ local function render()
 	local detail_col = 1 + 1 + NAME_WIDTH -- dot + space + name
 	for i, row in ipairs(rows) do
 		local line = i + 1 -- 0-indexed: lines[1] is summary, lines[2] is header
-		vim.api.nvim_buf_set_extmark(buf, ns, line, 0, { hl_group = HL[row.state], end_col = 1 })
-		vim.api.nvim_buf_set_extmark(buf, ns, line, detail_col, {
-			hl_group = "Comment",
-			end_col = detail_col + #row.detail,
-		})
+		hl.range(buf, ns, line, 0, 1, HL[row.state])
+		hl.range(buf, ns, line, detail_col, detail_col + #row.detail, "Comment")
 	end
 
 	-- restore cursor (buffer was rewritten)
@@ -220,13 +220,10 @@ local function render()
 end
 
 local function close()
-	if not state then
-		return
+	if state then
+		float.close(state) -- bufhidden=wipe cleans the buffer
+		state = nil
 	end
-	if vim.api.nvim_win_is_valid(state.win) then
-		vim.api.nvim_win_close(state.win, true) -- bufhidden=wipe cleans the buffer
-	end
-	state = nil
 end
 
 local function row_at_cursor()
@@ -239,7 +236,7 @@ end
 
 local function refresh(after)
 	vim.defer_fn(function()
-		if state and vim.api.nvim_win_is_valid(state.win) then
+		if float.is_open(state) then
 			render()
 		end
 	end, after or 250)
@@ -346,41 +343,37 @@ local function setup_keymaps(buf)
 end
 
 function M.open()
-	if state and vim.api.nvim_win_is_valid(state.win) then
+	if float.is_open(state) then
 		vim.api.nvim_set_current_win(state.win)
 		render()
 		return
 	end
 
 	local open_buf = vim.api.nvim_get_current_buf()
-	local buf = vim.api.nvim_create_buf(false, true) -- scratch, unlisted
-	vim.bo[buf].bufhidden = "wipe"
-
 	local width = math.min(FLOAT_WIDTH, (vim.o.columns or 80) - 4)
 	local height = math.min(#collect() + 3, math.max(5, (vim.o.lines or 24) - 10))
-	local win = vim.api.nvim_open_win(buf, true, {
+	local pos = float.center(width, height)
+	local f = float.open({
 		relative = "editor",
-		row = math.max(0, math.floor(((vim.o.lines or 24) - height) / 2)),
-		col = math.max(0, math.floor(((vim.o.columns or 80) - width) / 2)),
+		row = pos.row,
+		col = pos.col,
 		width = width,
 		height = height,
-		border = "single",
 		title = " LSP clients ",
 		title_pos = "center",
 	})
-	vim.wo[win].winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder"
-	vim.wo[win].cursorline = true
+	vim.wo[f.win].cursorline = true
 
-	state = { win = win, buf = buf, open_buf = open_buf, rows = {} }
-	setup_keymaps(buf)
+	state = { win = f.win, buf = f.buf, open_buf = open_buf, rows = {} }
+	setup_keymaps(f.buf)
 	render()
 
 	-- keep state fresh while open (starting → connected transitions)
 	vim.defer_fn(function()
-		if state and vim.api.nvim_win_is_valid(state.win) then
+		if float.is_open(state) then
 			render()
 			vim.defer_fn(function()
-				if state and vim.api.nvim_win_is_valid(state.win) then
+				if float.is_open(state) then
 					render()
 				end
 			end, 1500)

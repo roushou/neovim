@@ -14,6 +14,9 @@
 -- - The LSP section lists clients attached to the active window; clicking it
 --   opens the :LspInfo overview (lua/lsp/info.lua).
 
+local theme = require("ui.theme")
+local status = require("ui.status")
+
 -- mode -> { label, anchor group, printable name (for hl group names) }
 local MODE = {
 	n = { "NORMAL", "Directory", "Normal" }, -- blue
@@ -38,7 +41,21 @@ local palette = {}
 -- [mode name] -> chip group, tail group
 local GROUPS = {}
 
-local function setup_hl()
+-- Read resolved colors from the active colorscheme and (re)build the derived
+-- highlight groups. Runs on load and on every |ColorScheme|.
+local function refresh()
+	palette.bg = theme.bg({ "StatusLine", "Normal" }, 0x16161d)
+	palette.fg = theme.fg({ "StatusLine", "Normal" }, 0xdcd7ba)
+	for _, entry in pairs(MODE) do
+		palette[entry[2]] = theme.fg(entry[2], palette.fg)
+	end
+	palette.git = theme.fg("DiagnosticHint", palette.fg)
+	palette.gitcount = theme.fg("Comment", palette.fg)
+	palette.ft = theme.fg("Function", palette.fg)
+	palette.search = theme.fg("Constant", palette.fg)
+	palette.rec = theme.fg("Error", palette.fg)
+	palette.lsp = theme.fg({ "DiagnosticOk", "DiagnosticInfo" }, palette.fg)
+
 	for key, entry in pairs(MODE) do
 		local accent = palette[entry[2]]
 		local chip = "StatusLineMode" .. entry[3]
@@ -54,29 +71,6 @@ local function setup_hl()
 	vim.api.nvim_set_hl(0, "StatusLineSearch", { fg = palette.search })
 	vim.api.nvim_set_hl(0, "StatusLineRecording", { fg = palette.rec })
 	vim.api.nvim_set_hl(0, "StatusLineLsp", { fg = palette.lsp })
-end
-
--- Read resolved colors from the active colorscheme. Runs on load and on
--- every |ColorScheme|, so a `:colorscheme foo` restyles the statusline.
-local function derive()
-	local function fg(name)
-		return vim.api.nvim_get_hl(0, { name = name }).fg
-	end
-	local function bg(name)
-		return vim.api.nvim_get_hl(0, { name = name }).bg
-	end
-	palette.bg = bg("StatusLine") or bg("Normal") or 0x16161d
-	palette.fg = fg("StatusLine") or fg("Normal") or 0xdcd7ba
-	for _, entry in pairs(MODE) do
-		palette[entry[2]] = fg(entry[2]) or palette.fg
-	end
-	palette.git = fg("DiagnosticHint") or palette.fg
-	palette.gitcount = fg("Comment") or palette.fg
-	palette.ft = fg("Function") or palette.fg
-	palette.search = fg("Constant") or palette.fg
-	palette.rec = fg("Error") or palette.fg
-	palette.lsp = fg("DiagnosticOk") or fg("DiagnosticInfo") or palette.fg
-	setup_hl()
 end
 
 local function mode_info()
@@ -97,8 +91,7 @@ function _G.StatuslineMode()
 		return ""
 	end
 	local name, groups = mode_info()
-	-- plain concat: `%%` escaping in string.format would be error-prone
-	return "%#" .. groups.chip .. "# " .. name .. " %#" .. groups.tail .. "#▌%*"
+	return status.segment(groups.chip, " " .. name .. " ") .. status.segment(groups.tail, "▌")
 end
 
 -- Git branch + per-hunk counts, from gitsigns' per-buffer cache
@@ -113,7 +106,7 @@ local function git_section()
 	if #head > 24 then
 		head = head:sub(1, 11) .. "…"
 	end
-	local out = "%#StatusLineGit# ⎇ " .. head
+	local out = status.segment("StatusLineGit", " ⎇ " .. head)
 	local counts = {}
 	if (d.added or 0) > 0 then
 		counts[#counts + 1] = "+" .. d.added
@@ -125,7 +118,7 @@ local function git_section()
 		counts[#counts + 1] = "-" .. d.removed
 	end
 	if #counts > 0 then
-		out = out .. " %#StatusLineGitCount#" .. table.concat(counts, " ")
+		out = out .. " " .. status.segment("StatusLineGitCount", table.concat(counts, " "))
 	end
 	return out
 end
@@ -135,7 +128,7 @@ local function ft_section()
 	if ft == "" then
 		return ""
 	end
-	return "%#StatusLineFiletype# [" .. ft .. "]"
+	return status.segment("StatusLineFiletype", " [" .. ft .. "]")
 end
 
 -- Search progress, e.g. `[3/42]`. `recompute = false` reads nvim's cached
@@ -148,7 +141,7 @@ local function search_section()
 	if not sc or not sc.total or sc.total == 0 then
 		return ""
 	end
-	return "%#StatusLineSearch#[" .. sc.current .. "/" .. sc.total .. "]"
+	return status.segment("StatusLineSearch", "[" .. sc.current .. "/" .. sc.total .. "]")
 end
 
 local function rec_section()
@@ -159,7 +152,7 @@ local function rec_section()
 	if reg == "" then
 		return ""
 	end
-	return "%#StatusLineRecording# ● @" .. reg
+	return status.segment("StatusLineRecording", " ● @" .. reg)
 end
 
 function _G.StatuslineLeft()
@@ -198,7 +191,7 @@ local function lsp_section()
 	if #label > LSP_MAX then
 		label = label:sub(1, LSP_MAX - 1) .. "…"
 	end
-	return "%#StatusLineLsp#%@StatuslineLspClick@" .. label .. "%X%*"
+	return status.click("StatusLineLsp", label, "StatuslineLspClick")
 end
 
 function _G.StatuslineLspClick(...)
@@ -231,8 +224,7 @@ function _G.StatuslineRight()
 	return " " .. table.concat(parts, " ") .. " "
 end
 
-derive()
-vim.api.nvim_create_autocmd("ColorScheme", { callback = derive })
+theme.on_colorscheme(refresh)
 
 -- Mode is now shown in the statusline; hide the legacy "-- INSERT --" message.
 vim.o.showmode = false

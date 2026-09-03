@@ -1,3 +1,5 @@
+local status = require("ui.status")
+
 -- 0.12 built-in undo tree.
 vim.cmd("packadd nvim.undotree")
 
@@ -10,8 +12,9 @@ local function setup_diff_winbar(winid)
 	vim.api.nvim_win_call(winid, function()
 		if vim.wo.diff then
 			local side = vim.w.diff_side or ""
-			-- plain concat: `%%` escaping in string.format is error-prone
-			vim.wo.winbar = "%#Title#" .. side .. " %* %t %m%=%#Comment# ]c/[c hunk · za fold · :diffoff %*"
+			vim.wo.winbar = status.segment("Title", side .. " ")
+				.. " %t %m%="
+				.. status.segment("Comment", " ]c/[c hunk · za fold · :diffoff ")
 		elseif vim.wo.winbar:find("]c/[c", 1, true) then
 			vim.wo.winbar = "" -- ours; clear it
 		end

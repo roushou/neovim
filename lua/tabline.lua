@@ -10,6 +10,9 @@
 --- re-evaluated on every redraw, plus theme colors derived on load and on
 --- |ColorScheme|.
 
+local theme = require("ui.theme")
+local status = require("ui.status")
+
 local M = {}
 
 -- Show at most this many buffers; a window slides around the current one.
@@ -18,23 +21,16 @@ local MAX_VISIBLE = 15
 -- Space padding inside each buffer segment, around the label.
 local PADDING = 2
 
--- active-buffer chip colors (same derive pattern as the statusline)
+-- active-buffer chip colors (derived from the active colorscheme)
 local palette = {}
 
-local function setup_hl()
-	local function fg(name)
-		return vim.api.nvim_get_hl(0, { name = name }).fg
-	end
-	local function bg(name)
-		return vim.api.nvim_get_hl(0, { name = name }).bg
-	end
-	palette.bg = bg("StatusLine") or bg("Normal") or 0x16161d
-	palette.accent = fg("Directory") or fg("Function") or palette.bg
+local function refresh()
+	palette.bg = theme.bg({ "StatusLine", "Normal" }, 0x16161d)
+	palette.accent = theme.fg({ "Directory", "Function" }, palette.bg)
 	vim.api.nvim_set_hl(0, "TablineActive", { fg = palette.bg, bg = palette.accent, bold = true })
 	vim.api.nvim_set_hl(0, "TablineActiveTail", { fg = palette.accent })
 end
-setup_hl()
-vim.api.nvim_create_autocmd("ColorScheme", { callback = setup_hl })
+theme.on_colorscheme(refresh)
 
 local function listed_buffers()
 	local buffers = {}
@@ -63,24 +59,21 @@ local function segment_label(b)
 	end
 	local modified = vim.bo[b].modified and " ●" or ""
 	-- escape literal % (buffer names) so they aren't parsed as format items
-	return (icon .. name .. modified):gsub("%%", "%%%%")
+	return status.escape(icon .. name .. modified)
 end
 
 -- Current buffer: filled accent chip + tail; clickable via minwid = bufnr.
 local function active_segment(b)
 	local pad = (" "):rep(PADDING)
-	return string.format(
-		"%%#TablineActive#%%%d@TablineClick@%s%s%s%%X%%#TablineActiveTail#▍%%#TabLineFill# ",
-		b,
-		pad,
-		segment_label(b),
-		pad
-	)
+	return status.click("TablineActive", pad .. segment_label(b) .. pad, "TablineClick", { minwid = b })
+		.. status.segment("TablineActiveTail", "▍")
+		.. "%#TabLineFill# "
 end
 
 local function inactive_segment(b)
 	local pad = (" "):rep(PADDING)
-	return string.format("%%#TabLine#%%%d@TablineClick@%s%s%s%%X%%#TabLineFill# ", b, pad, segment_label(b), pad)
+	return status.click("TabLine", pad .. segment_label(b) .. pad, "TablineClick", { minwid = b })
+		.. "%#TabLineFill# "
 end
 
 --- Build the tabline format string (re-evaluated on every redraw).
