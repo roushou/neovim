@@ -1,6 +1,6 @@
 # Neovim
 
-My personal Neovim configuration — built-in plugin management, declarative LSP setup, and a few hand-rolled replacements (tabline, statusline, picker, formatter).
+My personal Neovim configuration — built-in plugin management, declarative LSP setup, and a set of hand-rolled features (tabline, statusline, symbol pickers, formatter, keymap reveal).
 
 <img width="1920" height="1170" alt="Editor with Kanagawa colorscheme showing a Rust file with custom statusline and buffer tabline" src="https://github.com/user-attachments/assets/25e34511-4c41-41bd-96cd-e6eb477e057e" />
 
@@ -32,19 +32,21 @@ Plugins are declared in [`init.lua`](./init.lua) via the built-in `vim.pack.add(
 ## Layout
 
 ```
-init.lua            entry point: plugins, colorscheme, textobjects
+init.lua            entry point: plugin declarations + module wiring
 nvim-pack-lock.json pinned plugin revisions
-after/plugin/       per-plugin configuration (blink, gitsigns, neo-tree, …)
+after/plugin/       per-plugin config (blink, gitsigns, kanagawa, neo-tree, …)
 lua/
 ├── keymaps.lua     global keymaps
 ├── settings.lua    options
-├── util.lua        small helpers
+├── util.lua        map() helper
 ├── keyd.lua        keymap-reveal helper
-├── tabline.lua     custom buffer tabline (bufferline.nvim replacement)
-├── format.lua      format-on-save via external binaries (conform.nvim replacement)
-├── lsp/            LSP machinery: handlers, keys, :LspInfo UI, loader
-plugins/            treesitter setup (parsers, textobjects)
-lsp/                declarative server configs — one file per LSP
+├── tabline.lua     buffer tabline
+├── format.lua      format-on-save via external binaries
+├── lsp/            LSP machinery: loader, keys, handlers, :LspInfo, pickers
+├── ui/             shared UI helpers: theme colors, floats, extmarks, status strings
+└── plugins/
+    └── treesitter.lua  parsers + textobjects setup
+lsp/                declarative server configs — one file per LSP (data only)
 ```
 
 ### Adding an LSP server

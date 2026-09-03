@@ -1,4 +1,5 @@
 local status = require("ui.status")
+local map = require("util").map
 
 -- 0.12 built-in undo tree.
 vim.cmd("packadd nvim.undotree")
@@ -31,7 +32,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
 -- :Gdiff — diff the current file against HEAD: HEAD version in a scratch
 -- buffer (vertical split, nofile) with :diffthis in both windows.
 -- Key is <leader>gd; diffview.nvim still owns <leader>gv until it's dropped.
-vim.keymap.set("n", "<leader>gd", "<cmd>Gdiff<cr>", { desc = "Diff current file vs HEAD" })
+map("n", "<leader>gd", "<cmd>Gdiff<cr>", { desc = "Diff current file vs HEAD" })
 vim.api.nvim_create_user_command("Gdiff", function()
 	local rel = vim.fn.expand("%:~:.")
 	if rel == "" then

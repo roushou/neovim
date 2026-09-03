@@ -1,3 +1,5 @@
+local map = require("util").map
+
 local M = {}
 
 -- Parsers to ensure are always installed.
@@ -65,28 +67,28 @@ function M.setup()
 
 	-- Select keymaps
 	local select_mod = require("nvim-treesitter-textobjects.select")
-	vim.keymap.set({ "x", "o" }, "af", function()
+	map({ "x", "o" }, "af", function()
 		select_mod.select_textobject("@function.outer")
 	end, { desc = "Select function outer" })
-	vim.keymap.set({ "x", "o" }, "if", function()
+	map({ "x", "o" }, "if", function()
 		select_mod.select_textobject("@function.inner")
 	end, { desc = "Select function inner" })
-	vim.keymap.set({ "x", "o" }, "ac", function()
+	map({ "x", "o" }, "ac", function()
 		select_mod.select_textobject("@class.outer")
 	end, { desc = "Select class outer" })
 
 	-- Move keymaps
 	local move_mod = require("nvim-treesitter-textobjects.move")
-	vim.keymap.set({ "n", "x", "o" }, "]m", function()
+	map({ "n", "x", "o" }, "]m", function()
 		move_mod.goto_next_start("@function.outer")
 	end, { desc = "Next function start" })
-	vim.keymap.set({ "n", "x", "o" }, "]o", function()
+	map({ "n", "x", "o" }, "]o", function()
 		move_mod.goto_next_start({ "@loop.inner", "@loop.outer" })
 	end, { desc = "Next loop" })
-	vim.keymap.set({ "n", "x", "o" }, "]s", function()
+	map({ "n", "x", "o" }, "]s", function()
 		move_mod.goto_next_start("@local.scope", "locals")
 	end, { desc = "Next scope" })
-	vim.keymap.set({ "n", "x", "o" }, "]z", function()
+	map({ "n", "x", "o" }, "]z", function()
 		move_mod.goto_next_start("@fold", "folds")
 	end, { desc = "Next fold" })
 end

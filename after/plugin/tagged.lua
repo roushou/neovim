@@ -5,6 +5,7 @@
 -- Needs the parsers in lua/plugins/treesitter.lua ensure_installed.
 
 local api, ts = vim.api, vim.treesitter
+local map = require("util").map
 
 -- Native, live paired-tag rename where the language server supports it.
 vim.lsp.linked_editing_range.enable(true)
@@ -390,7 +391,7 @@ local function attach(buf)
 	vim.b[buf].tagged_attached = true
 	local group = api.nvim_create_augroup("tagged-" .. buf, { clear = true })
 
-	vim.keymap.set("i", ">", function()
+	map("i", ">", function()
 		local row, col = unpack(api.nvim_win_get_cursor(0))
 		api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, { ">" })
 		local line = api.nvim_buf_get_lines(buf, row - 1, row, false)[1]
@@ -399,9 +400,9 @@ local function attach(buf)
 		end
 		-- Cursor sits right after the `>` (inside the tag) in every case.
 		api.nvim_win_set_cursor(0, { row, col + 1 })
-	end, { buf = buf, noremap = true, silent = true })
+	end, { buf = buf })
 
-	vim.keymap.set("i", "/", function()
+	map("i", "/", function()
 		local row, col = unpack(api.nvim_win_get_cursor(0))
 		api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, { "/" })
 		local line = api.nvim_buf_get_lines(buf, row - 1, row, false)[1]
@@ -411,7 +412,7 @@ local function attach(buf)
 		end
 		-- After `</name>` the cursor is before the `>`; otherwise after the `/`.
 		api.nvim_win_set_cursor(0, { row, col + 1 + inserted })
-	end, { buf = buf, noremap = true, silent = true })
+	end, { buf = buf })
 
 	api.nvim_create_autocmd("InsertLeave", {
 		group = group,
