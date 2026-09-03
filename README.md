@@ -40,7 +40,11 @@ lua/
 ├── settings.lua    options
 ├── util.lua        map() helper
 ├── keyd.lua        keymap-reveal helper
+├── statusline.lua  statusline
 ├── tabline.lua     buffer tabline
+├── notify.lua      ui2 message routing
+├── builtins.lua    undo tree, :Gdiff, yank flash
+├── tagged.lua      tag close/rename helpers
 ├── format.lua      format-on-save via external binaries
 ├── filetypes.lua   per-filetype defaults (indent, detection)
 ├── lsp/            LSP machinery: loader, keys, handlers, :LspInfo, pickers

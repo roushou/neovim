@@ -4,7 +4,7 @@ local M = {}
 
 -- Parsers to ensure are always installed.
 -- Call `:TSUpdate` to update them, `:TSInstall {lang}` to add new ones.
--- html/js/ts/svelte/vue power the native tag helpers (after/plugin/tagged.lua).
+-- html/js/ts/svelte/vue power the native tag helpers (lua/tagged.lua).
 M.ensure_installed = {
 	"lua",
 	"vimdoc",

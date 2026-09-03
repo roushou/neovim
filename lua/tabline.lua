@@ -6,7 +6,7 @@
 --- Left-click switches buffer, middle-click closes it. H/L cycle (mapped in
 --- keymaps.lua).
 ---
---- Same idiom as after/plugin/statusline.lua: a `%{%v:lua...%}` expression
+--- Same idiom as lua/statusline.lua: a `%{%v:lua...%}` expression
 --- re-evaluated on every redraw, plus theme colors derived on load and on
 --- |ColorScheme|.
 
