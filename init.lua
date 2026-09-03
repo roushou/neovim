@@ -61,17 +61,9 @@ vim.pack.add({
 })
 
 require("lsp")
-
--- keyd: keymap-reveal plugin (own code)
 require("keyd")
-
--- Custom buffer tabline (own bufferline.nvim replacement)
 require("tabline")
-
--- own formatter runner (conform.nvim replacement)
 require("format").attach()
-
--- Treesitter (setup + textobject keymaps live in lua/plugins/treesitter.lua)
 require("plugins.treesitter").setup()
 
 -- Colorscheme (must come after treesitter setup for highlight group linking)

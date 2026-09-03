@@ -1,4 +1,4 @@
---- Custom `:LspInfo` replacement (nvim-lspconfig's UI without the plugin).
+--- :LspInfo UI.
 ---
 --- Shows every LSP server that is either configured via |vim.lsp.config()| or
 --- currently running (clients started externally, e.g. rustaceanvim), with its

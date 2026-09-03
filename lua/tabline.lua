@@ -1,4 +1,4 @@
---- Custom buffer tabline (own bufferline.nvim replacement).
+--- Buffer tabline.
 ---
 --- Renders listed buffers in the global tabline: file icon (mini.icons) +
 --- name + modified marker per buffer. The current buffer is a filled accent

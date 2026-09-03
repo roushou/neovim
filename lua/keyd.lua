@@ -1,4 +1,4 @@
---- keyd: own keymap-reveal plugin (v1: normal mode only).
+--- keymap-reveal (normal mode only).
 ---
 --- Trigger keys open a float listing mappings that start with the typed
 --- prefix; typing more filters, <CR> executes, <BS> pops, <Esc>/<C-c>

@@ -1,5 +1,4 @@
 --- LSP entry point: loads config, handlers, keys and the :LspInfo UI.
---- Required by init.lua (`require("lsp")` resolves here).
 
 local map = require("util").map
 
