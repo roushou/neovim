@@ -72,8 +72,7 @@ end
 
 local function inactive_segment(b)
 	local pad = (" "):rep(PADDING)
-	return status.click("TabLine", pad .. segment_label(b) .. pad, "TablineClick", { minwid = b })
-		.. "%#TabLineFill# "
+	return status.click("TabLine", pad .. segment_label(b) .. pad, "TablineClick", { minwid = b }) .. "%#TabLineFill# "
 end
 
 --- Build the tabline format string (re-evaluated on every redraw).

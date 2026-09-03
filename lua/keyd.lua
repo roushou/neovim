@@ -261,37 +261,36 @@ trigger_rhs = function(trigger)
 					vim.api.nvim_win_set_cursor(state.win, { math.max(1, math.min(n, cur + step)), 0 })
 					vim.cmd("redraw")
 				end
-				goto continue
-			end
-			if key == CR then
-				exec()
-				return
-			end
-			if key == BS then
-				if #state.query <= 1 then
-					close_window()
-					state = nil
+			else
+				if key == CR then
+					exec()
 					return
 				end
-				table.remove(state.query)
-			else
-				table.insert(state.query, key)
-			end
-			state.clues = filter_clues(state.buf_id, state.query)
+				if key == BS then
+					if #state.query <= 1 then
+						close_window()
+						state = nil
+						return
+					end
+					table.remove(state.query)
+				else
+					table.insert(state.query, key)
+				end
+				state.clues = filter_clues(state.buf_id, state.query)
 
-			local q = table.concat(state.query, "")
-			local count = 0
-			for _ in pairs(state.clues) do
-				count = count + 1
+				local q = table.concat(state.query, "")
+				local count = 0
+				for _ in pairs(state.clues) do
+					count = count + 1
+				end
+				if count == 0 or (count == 1 and state.clues[q]) then
+					exec()
+					return
+				end
+				if float.is_open(state) then
+					render()
+				end
 			end
-			if count == 0 or (count == 1 and state.clues[q]) then
-				exec()
-				return
-			end
-			if float.is_open(state) then
-				render()
-			end
-			::continue::
 		end
 	end
 end
