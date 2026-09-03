@@ -71,50 +71,8 @@ require("tabline")
 -- own formatter runner (conform.nvim replacement)
 require("format").attach()
 
--- Treesitter
-local ts = require("plugins.treesitter")
-require("nvim-treesitter").setup({})
-require("nvim-treesitter").install(ts.ensure_installed)
-
--- Enable treesitter highlighting + indentation per filetype
-vim.api.nvim_create_autocmd("FileType", {
-	pattern = ts.filetypes,
-	callback = function()
-		vim.treesitter.start()
-		vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-	end,
-})
-
--- Textobjects
-local textobjects = require("nvim-treesitter-textobjects")
-textobjects.setup(ts.textobjects)
-
--- Select keymaps
-local select_mod = require("nvim-treesitter-textobjects.select")
-vim.keymap.set({ "x", "o" }, "af", function()
-	select_mod.select_textobject("@function.outer")
-end, { desc = "Select function outer" })
-vim.keymap.set({ "x", "o" }, "if", function()
-	select_mod.select_textobject("@function.inner")
-end, { desc = "Select function inner" })
-vim.keymap.set({ "x", "o" }, "ac", function()
-	select_mod.select_textobject("@class.outer")
-end, { desc = "Select class outer" })
-
--- Move keymaps
-local move_mod = require("nvim-treesitter-textobjects.move")
-vim.keymap.set({ "n", "x", "o" }, "]m", function()
-	move_mod.goto_next_start("@function.outer")
-end, { desc = "Next function start" })
-vim.keymap.set({ "n", "x", "o" }, "]o", function()
-	move_mod.goto_next_start({ "@loop.inner", "@loop.outer" })
-end, { desc = "Next loop" })
-vim.keymap.set({ "n", "x", "o" }, "]s", function()
-	move_mod.goto_next_start("@local.scope", "locals")
-end, { desc = "Next scope" })
-vim.keymap.set({ "n", "x", "o" }, "]z", function()
-	move_mod.goto_next_start("@fold", "folds")
-end, { desc = "Next fold" })
+-- Treesitter (setup + textobject keymaps live in lua/plugins/treesitter.lua)
+require("plugins.treesitter").setup()
 
 -- Colorscheme (must come after treesitter setup for highlight group linking)
 require("kanagawa").setup({
