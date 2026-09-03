@@ -65,17 +65,3 @@ require("keyd")
 require("tabline")
 require("format").attach()
 require("plugins.treesitter").setup()
-
--- Colorscheme (must come after treesitter setup for highlight group linking)
-require("kanagawa").setup({
-	colors = {
-		theme = {
-			all = {
-				ui = {
-					bg_gutter = "none",
-				},
-			},
-		},
-	},
-})
-vim.cmd.colorscheme("kanagawa")
