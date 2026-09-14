@@ -9,6 +9,13 @@ return {
 			runtime = { version = "LuaJIT" },
 			diagnostics = { globals = { "vim" } },
 			completion = { callSnippet = "Replace" },
+			hint = {
+				enable = true,
+				paramType = true,
+				paramName = "Literal",
+				setType = true,
+				arrayIndex = "Disable",
+			},
 			telemetry = { enable = false },
 			workspace = {
 				library = vim.api.nvim_get_runtime_file("", true),
