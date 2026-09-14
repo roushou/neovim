@@ -76,12 +76,19 @@ local function merge_hints(hints)
 	return table.concat(parts)
 end
 
-local function refresh_handler(_, result, ctx)
+local function refresh_handler(err, result, ctx)
 	local bufnr = ctx.bufnr or -1
-	if not vim.api.nvim_buf_is_valid(bufnr) or not result then
+	if err or not vim.api.nvim_buf_is_valid(bufnr) then
+		return
+	end
+	-- drop responses for a buffer version that has since changed
+	if vim.lsp.util.buf_versions[bufnr] ~= ctx.version then
 		return
 	end
 	vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+	if not result then
+		return
+	end
 
 	-- group hints by line, preserving order for column sorting
 	local by_line = {}
@@ -100,6 +107,8 @@ local function refresh_handler(_, result, ctx)
 	end
 end
 
+-- Install the eol handler and auto-enable hints for inlayHint-capable
+-- clients on attach (per-filetype overrides below still apply).
 vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
 	group = vim.api.nvim_create_augroup("lsp_endhints", { clear = true }),
 	callback = function(ctx)
@@ -107,7 +116,8 @@ vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
 		if not client or not client.server_capabilities.inlayHintProvider then
 			return
 		end
-		-- per-client handler override (vim.lsp.handlers table is deprecated)
+		-- per-client handler override (vim.lsp.handlers table is deprecated);
+		-- client:request() resolves client.handlers before the global table
 		client.handlers["textDocument/inlayHint"] = refresh_handler
 		vim.lsp.inlay_hint.enable(ctx.event == "LspAttach", { bufnr = ctx.buf })
 	end,
@@ -138,19 +148,6 @@ vim.lsp.inlay_hint.enable = function(enable, filter)
 	end
 	original_enable(enable, filter)
 end
-
--- Auto-enable hints for inlayHint-capable clients (mirrors the plugin's
--- autoEnableHints; per-filetype overrides below still apply).
-vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
-	group = vim.api.nvim_create_augroup("lsp_endhints", { clear = true }),
-	callback = function(ctx)
-		local client = vim.lsp.get_client_by_id(ctx.data.client_id)
-		if not client or not client.server_capabilities.inlayHintProvider then
-			return
-		end
-		vim.lsp.inlay_hint.enable(ctx.event == "LspAttach", { bufnr = ctx.buf })
-	end,
-})
 
 -- Per-filetype hint defaults (rust disables, cpp enables).
 local FILETYPE_HINTS = {
