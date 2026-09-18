@@ -7,6 +7,7 @@ local harness = require("tests.harness")
 for _, spec in ipairs({
 	"tests.spec_util_proc",
 	"tests.spec_util_textfield",
+	"tests.spec_util_debounce",
 	"tests.spec_ui_preview",
 	"tests.spec_loupe_backend",
 	"tests.spec_loupe_icons",

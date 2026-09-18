@@ -4,17 +4,16 @@
 --- rendered with a dimmed container + right-aligned file:line.
 
 local shared = require("lsp.features.pick.shared")
+local debounce = require("util.debounce")
 
 local M = {}
 
 --- Workspace picker state.
---- - timer: debounce between query changes and server requests.
 --- - timeout: safety net for servers that never answer.
 --- - acc: accumulator of the in-flight request (one per query tick).
 --- - loading: whether a request is pending (keeps the search hint visible).
 local ws = {
 	buf = nil,
-	timer = vim.uv.new_timer(),
 	timeout = vim.uv.new_timer(),
 	last_q = "",
 	last_tick = nil,
@@ -22,8 +21,13 @@ local ws = {
 	acc = nil,
 }
 
+local ws_request
+local ws_debounce = debounce.new(200, function(q, tick)
+	ws_request(q, tick)
+end)
+
 local function ws_reset()
-	ws.timer:stop()
+	ws_debounce:cancel()
 	ws.timeout:stop()
 	ws.buf = nil
 	ws.last_q = ""
@@ -128,7 +132,7 @@ local function ws_deliver(acc, tick, err_msg)
 end
 
 --- Fire workspace/symbol at every capable client; merge responses.
-local function ws_request(q, tick)
+ws_request = function(q, tick)
 	if not shared.pick().is_picker_active() or shared.pick().get_querytick() ~= tick then
 		return
 	end
@@ -188,7 +192,7 @@ end
 --- restores the search hint when the query is cleared.
 local function ws_on_query(q, tick)
 	if q == "" then
-		ws.timer:stop()
+		ws_debounce:cancel()
 		ws.timeout:stop()
 		ws.acc, ws.loading = nil, false
 		if ws.last_q ~= "" then
@@ -206,14 +210,7 @@ local function ws_on_query(q, tick)
 	end
 	ws.last_q, ws.last_tick = q, tick
 	ws.loading = true
-	ws.timer:stop()
-	ws.timer:start(
-		200,
-		0,
-		vim.schedule_wrap(function()
-			ws_request(q, tick)
-		end)
-	)
+	ws_debounce:call(q, tick)
 end
 
 --- source.match wrapper: default fuzzy matching (synchronous so we can tweak
