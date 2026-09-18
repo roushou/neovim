@@ -18,6 +18,7 @@ local frecency = require("loupe.frecency")
 local git = require("loupe.git")
 local action = require("loupe.action")
 local tf = require("util.textfield")
+local input = require("loupe.input")
 
 local M = {}
 
@@ -92,19 +93,6 @@ local function move(delta)
 		return
 	end
 	S.index = ((S.index - 1 + delta) % n + n) % n + 1
-end
-
---- A key is printable when it isn't a special `<...>` sequence or a control byte.
---- keytrans() renders space and `<` as `<Space>`/`<lt>`, so allow those through.
-local function is_printable(ch, key)
-	if key == "<Space>" or key == "<lt>" then
-		return true
-	end
-	if key:match("^<.+>$") then
-		return false
-	end
-	local b = ch:byte(1)
-	return b ~= nil and b >= 32 and b ~= 127
 end
 
 --- Replace the query, reset the selection and refilter (caller redraws).
@@ -261,138 +249,6 @@ local function mouse_select()
 	return true
 end
 
---- Handle one key while an inline prompt (rename/delete/create) is active.
-local function handle_prompt(ch, key)
-	local p = S.prompt
-	if key == "<CR>" then
-		local value, name = p.value, p.action
-		S.prompt = nil
-		run_action(name, value)
-	elseif key == "<Esc>" or key == "<C-C>" then
-		S.prompt = nil
-	elseif key == "<BS>" then
-		p.value, p.caret = tf.backspace(p.value, p.caret)
-	elseif key == "<Del>" then
-		p.value, p.caret = tf.delete(p.value, p.caret)
-	elseif key == "<C-W>" then
-		p.value, p.caret = tf.delete_word(p.value, p.caret)
-	elseif key == "<C-U>" then
-		p.value, p.caret = "", 0
-	elseif key == "<Left>" or key == "<C-B>" then
-		p.caret = math.max(0, p.caret - 1)
-	elseif key == "<Right>" or key == "<C-F>" then
-		p.caret = math.min(tf.len(p.value), p.caret + 1)
-	elseif key == "<Home>" or key == "<C-A>" then
-		p.caret = 0
-	elseif key == "<End>" or key == "<C-E>" then
-		p.caret = tf.len(p.value)
-	elseif is_printable(ch, key) then
-		p.value, p.caret = tf.insert(p.value, p.caret, ch)
-	end
-end
-
---- Handle one key while the action prefix (`<C-x>`) is showing.
-local function handle_prefix(key)
-	S.prefix = nil
-	local item = current()
-	if not item then
-		return
-	end
-	if key == "r" then
-		start_prompt("Rename: ", item.cand.rel, "rename")
-	elseif key == "d" then
-		start_prompt("Delete " .. item.cand.rel .. "? [y/N] ", "", "delete")
-	elseif key == "a" then
-		start_prompt("Add: ", "", "create")
-	elseif key == "y" then
-		action.yank({ session = S, item = item, root = S.root })
-	end
-end
-
---- Handle one normal-mode key. Returns true when the picker should quit.
-local function handle_normal(ch, key)
-	if key == "<CR>" then
-		return not choose("edit")
-	elseif key == "<Esc>" or key == "<C-C>" then
-		M.close()
-		return true
-	elseif key == "<C-S>" then
-		return not choose("split")
-	elseif key == "<C-V>" then
-		return not choose("vsplit")
-	elseif key == "<C-T>" then
-		return not choose("tab")
-	elseif key == "<C-X>" then
-		S.prefix = true
-	elseif key == "<LeftMouse>" then
-		mouse_select()
-	elseif key == "<2-LeftMouse>" then
-		if mouse_select() then
-			return not choose("edit")
-		end
-	elseif key == "<ScrollWheelUp>" then
-		move(-3)
-	elseif key == "<ScrollWheelDown>" then
-		move(3)
-	elseif key == "<C-N>" or key == "<Down>" then
-		move(1)
-	elseif key == "<C-P>" or key == "<Up>" then
-		move(-1)
-	elseif key == "<C-D>" then
-		move(page())
-	elseif key == "<C-U>" then
-		move(-page())
-	elseif key == "<C-O>" then
-		S.mode = S.mode == "files" and "dirs" or "files"
-		S.query = ""
-		S.caret = 0
-		S.git = nil
-		reload()
-	elseif key == "<C-W>" then
-		set_query(tf.delete_word(S.query, S.caret))
-	elseif key == "<BS>" then
-		set_query(tf.backspace(S.query, S.caret))
-	elseif key == "<Del>" then
-		set_query(tf.delete(S.query, S.caret))
-	elseif key == "<Left>" or key == "<C-B>" then
-		S.caret = math.max(0, S.caret - 1)
-	elseif key == "<Right>" or key == "<C-F>" then
-		S.caret = math.min(tf.len(S.query), S.caret + 1)
-	elseif key == "<Home>" or key == "<C-A>" then
-		S.caret = 0
-	elseif key == "<End>" or key == "<C-E>" then
-		S.caret = tf.len(S.query)
-	elseif is_printable(ch, key) then
-		set_query(tf.insert(S.query, S.caret, ch))
-	end
-	return false
-end
-
-local function loop()
-	render()
-	while active() do
-		local ch = vim.fn.getcharstr()
-		if ch == "" then
-			M.close()
-			return
-		end
-		local key = vim.fn.keytrans(ch)
-
-		local quit
-		if S.prompt then
-			handle_prompt(ch, key)
-		elseif S.prefix then
-			handle_prefix(key)
-		else
-			quit = handle_normal(ch, key)
-		end
-		if quit then
-			return
-		end
-		render()
-	end
-end
-
 --- Open the picker.
 function M.open()
 	if active() then
@@ -446,7 +302,25 @@ function M.open()
 	})
 
 	reload()
-	loop()
+	input.run({
+		state = S,
+		is_active = active,
+		render = render,
+		close = M.close,
+		choose = choose,
+		reload = reload,
+		refresh = refresh,
+		move = move,
+		page = page,
+		current = current,
+		set_query = set_query,
+		start_prompt = start_prompt,
+		run_action = run_action,
+		mouse_select = mouse_select,
+		yank = function(item)
+			action.yank({ session = S, item = item, root = S.root })
+		end,
+	})
 end
 
 --- Toggle the picker.
