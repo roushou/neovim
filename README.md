@@ -47,6 +47,7 @@ lua/
 ├── tagged.lua      tag close/rename helpers
 ├── format.lua      format-on-save via external binaries
 ├── filetypes.lua   per-filetype defaults (indent, detection)
+├── loupe/          bottom fuzzy file drawer + full-screen live preview
 ├── lsp/            LSP core (loader, keys) + features (info, pickers, hints)
 ├── ui/             UI helpers (theme, float, hl, status) + diagnostic float
 └── plugins/
@@ -73,7 +74,7 @@ It's registered and enabled automatically. Shared defaults (completion capabilit
 
 | Key           | Action                    |
 | ------------- | ------------------------- |
-| `<C-p>`       | Pick file                 |
+| `<C-p>`       | Find files                |
 | `<leader>fw`  | Live grep                 |
 | `<C-n>`       | Toggle file explorer      |
 | `H` / `L`     | Previous / next buffer    |
@@ -82,6 +83,8 @@ It's registered and enabled automatically. Shared defaults (completion capabilit
 | `<leader>ss`  | LSP symbols (document)    |
 | `<leader>sw`  | LSP workspace symbols     |
 | `<C-h/j/k/l>` | Navigate windows          |
+
+Inside Loupe (`<C-p>`): `<CR>` open, `<C-s>`/`<C-v>`/`<C-t>` open in split/vsplit/tab, `<C-o>` toggle files/directories, `<C-x>` action prefix (`r` rename/move, `d` delete, `a` add, `y` yank path), `<Left>`/`<Right>` (or `<C-b>`/`<C-f>`) move the query caret, `<Home>`/`<End>` (or `<C-a>`/`<C-e>`) jump, `<BS>`/`<Del>`/`<C-w>` edit, `<C-d>`/`<C-u>` page, mouse click/double-click/wheel.
 
 # License
 
