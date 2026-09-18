@@ -39,6 +39,7 @@ lua/
 ├── keymaps.lua     global keymaps
 ├── settings.lua    options
 ├── util.lua        map() helper
+├── util/           process wrapper (proc)
 ├── keyd.lua        keymap-reveal helper
 ├── statusline.lua  statusline
 ├── tabline.lua     buffer tabline
@@ -49,10 +50,11 @@ lua/
 ├── filetypes.lua   per-filetype defaults (indent, detection)
 ├── loupe/          bottom fuzzy file drawer + full-screen live preview
 ├── lsp/            LSP core (loader, keys) + features (info, pickers, hints)
-├── ui/             UI helpers (theme, float, hl, status) + diagnostic float
+├── ui/             UI helpers (theme, float, hl, status, buf, win, preview) + diagnostic float
 └── plugins/
     └── treesitter.lua  parsers + textobjects setup
 lsp/                declarative server configs — one file per LSP (data only)
+tests/              pure headless unit tests
 ```
 
 ### Adding an LSP server
@@ -85,6 +87,16 @@ It's registered and enabled automatically. Shared defaults (completion capabilit
 | `<C-h/j/k/l>` | Navigate windows          |
 
 Inside Loupe (`<C-p>`): `<CR>` open, `<C-s>`/`<C-v>`/`<C-t>` open in split/vsplit/tab, `<C-o>` toggle files/directories, `<C-x>` action prefix (`r` rename/move, `d` delete, `a` add, `y` yank path), `<Left>`/`<Right>` (or `<C-b>`/`<C-f>`) move the query caret, `<Home>`/`<End>` (or `<C-a>`/`<C-e>`) jump, `<BS>`/`<Del>`/`<C-w>` edit, `<C-d>`/`<C-u>` page, mouse click/double-click/wheel.
+
+## Health & tests
+
+`:checkhealth loupe` reports external tools (`rg`/`fd`/`git`), the configured backend, and the resolved project root.
+
+Pure unit tests (no plugins) run headlessly and in CI:
+
+```sh
+nvim --headless -u tests/minimal_init.lua -l tests/run.lua
+```
 
 # License
 

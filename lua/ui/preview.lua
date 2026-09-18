@@ -21,7 +21,12 @@ end
 --- Read at most `max_lines` lines from `path` (all when nil).
 --- Returns `lines, err, truncated`; `err` is nil on success.
 function M.read(path, max_lines)
-	local ok, res = pcall(vim.fn.readfile, path, "", max_lines and (max_lines + 1) or nil)
+	local ok, res
+	if max_lines then
+		ok, res = pcall(vim.fn.readfile, path, "", max_lines + 1)
+	else
+		ok, res = pcall(vim.fn.readfile, path, "")
+	end
 	if not ok then
 		return nil, res, false
 	end
