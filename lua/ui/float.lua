@@ -4,6 +4,9 @@
 --- scratch buffer with bufhidden=wipe, a border/title, and the standard
 --- `Normal:NormalFloat,FloatBorder:FloatBorder` window highlight.
 
+local buf = require("ui.buf")
+local win = require("ui.win")
+
 local M = {}
 
 M.HL = "Normal:NormalFloat,FloatBorder:FloatBorder"
@@ -14,9 +17,8 @@ M.HL = "Normal:NormalFloat,FloatBorder:FloatBorder"
 --- winhighlight }.
 function M.open(opts)
 	opts = opts or {}
-	local buf = vim.api.nvim_create_buf(false, true)
-	vim.bo[buf].bufhidden = "wipe"
-	local win = vim.api.nvim_open_win(buf, true, {
+	local bufnr = buf.scratch({ bufhidden = "wipe" })
+	local winid = vim.api.nvim_open_win(bufnr, true, {
 		relative = opts.relative or "editor",
 		anchor = opts.anchor,
 		row = opts.row or 0,
@@ -29,8 +31,8 @@ function M.open(opts)
 		zindex = opts.zindex,
 		noautocmd = opts.noautocmd,
 	})
-	vim.wo[win].winhighlight = opts.winhighlight or M.HL
-	return { win = win, buf = buf }
+	win.set(winid, { winhighlight = opts.winhighlight or M.HL })
+	return { win = winid, buf = bufnr }
 end
 
 --- Whether a float state (as returned by M.open) is still open.

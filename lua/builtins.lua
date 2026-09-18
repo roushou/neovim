@@ -1,6 +1,7 @@
 local status = require("ui.status")
 local map = require("util").map
 local proc = require("util.proc")
+local buf = require("ui.buf")
 
 -- 0.12 built-in undo tree.
 vim.cmd("packadd nvim.undotree")
@@ -55,9 +56,7 @@ vim.api.nvim_create_user_command("Gdiff", function()
 
 	local orig_ft = vim.bo.filetype
 	vim.cmd("vnew")
-	vim.bo.buftype = "nofile"
-	vim.bo.bufhidden = "wipe"
-	vim.bo.filetype = orig_ft
+	buf.set(0, { buftype = "nofile", bufhidden = "wipe", filetype = orig_ft })
 	vim.api.nvim_buf_set_name(0, rel .. " (HEAD)")
 	local lines = vim.split(out, "\n", { plain = true })
 	if lines[#lines] == "" then

@@ -16,6 +16,7 @@
 local map = require("util").map
 local float = require("ui.float")
 local hl = require("ui.hl")
+local win = require("ui.win")
 
 local M = {}
 
@@ -362,7 +363,7 @@ function M.open()
 		title = " LSP clients ",
 		title_pos = "center",
 	})
-	vim.wo[f.win].cursorline = true
+	win.set(f.win, { cursorline = true })
 
 	state = { win = f.win, buf = f.buf, open_buf = open_buf, rows = {} }
 	setup_keymaps(f.buf)

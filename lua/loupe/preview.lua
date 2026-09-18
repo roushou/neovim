@@ -11,6 +11,8 @@
 --- line numbers line up with regular windows.
 
 local preview = require("ui.preview")
+local buf = require("ui.buf")
+local win = require("ui.win")
 
 local M = {}
 
@@ -67,11 +69,7 @@ end
 --- Open the float over the drawer. `drawer_win` determines the available rows.
 function M.open(drawer_win, opts)
 	opts = opts or default_window_opts()
-	P.buf = vim.api.nvim_create_buf(false, true)
-	vim.bo[P.buf].buftype = "nofile"
-	vim.bo[P.buf].bufhidden = "wipe"
-	vim.bo[P.buf].swapfile = false
-	vim.bo[P.buf].buflisted = false
+	P.buf = buf.scratch({ bufhidden = "wipe" })
 
 	local top, height = geometry(drawer_win)
 	P.win = vim.api.nvim_open_win(P.buf, false, {
@@ -88,16 +86,18 @@ function M.open(drawer_win, opts)
 
 	-- Mirror the editor's window options so the preview looks like a normal
 	-- buffer view (same gutter padding, numbers, wrapping).
-	vim.wo[P.win].number = opts.number
-	vim.wo[P.win].relativenumber = opts.relativenumber
-	vim.wo[P.win].signcolumn = opts.signcolumn
-	vim.wo[P.win].wrap = opts.wrap
-	vim.wo[P.win].linebreak = opts.linebreak
-	vim.wo[P.win].list = opts.list
-	vim.wo[P.win].foldenable = false
-	vim.wo[P.win].cursorline = false
-	vim.wo[P.win].scrolloff = 0
-	vim.wo[P.win].winhighlight = "Normal:Normal"
+	win.set(P.win, {
+		number = opts.number,
+		relativenumber = opts.relativenumber,
+		signcolumn = opts.signcolumn,
+		wrap = opts.wrap,
+		linebreak = opts.linebreak,
+		list = opts.list,
+		foldenable = false,
+		cursorline = false,
+		scrolloff = 0,
+		winhighlight = "Normal:Normal",
+	})
 end
 
 --- Open the preview if it isn't already showing.

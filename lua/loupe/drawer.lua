@@ -5,6 +5,8 @@
 --- ranked match, with matched characters, icons and git markers highlighted.
 
 local hl = require("ui.hl")
+local buf = require("ui.buf")
+local win = require("ui.win")
 local icons = require("loupe.icons")
 
 local M = {}
@@ -28,30 +30,28 @@ end
 function M.open(height)
 	define_highlights()
 
-	local buf = vim.api.nvim_create_buf(false, true)
-	vim.bo[buf].buftype = "nofile"
-	vim.bo[buf].bufhidden = "wipe"
-	vim.bo[buf].swapfile = false
-	vim.bo[buf].buflisted = false
+	local bufnr = buf.scratch({ bufhidden = "wipe" })
 
 	vim.cmd(("botright %dsplit"):format(height))
-	local win = vim.api.nvim_get_current_win()
-	vim.api.nvim_win_set_buf(win, buf)
+	local winid = vim.api.nvim_get_current_win()
+	vim.api.nvim_win_set_buf(winid, bufnr)
 
-	vim.wo[win].winfixheight = true
-	vim.wo[win].number = false
-	vim.wo[win].relativenumber = false
-	vim.wo[win].signcolumn = "no"
-	vim.wo[win].wrap = false
-	vim.wo[win].cursorline = true
-	vim.wo[win].foldenable = false
-	vim.wo[win].spell = false
-	vim.wo[win].list = false
-	vim.wo[win].scrolloff = 0
-	vim.wo[win].winhighlight = "Normal:Normal,WinBar:LoupeBorder,WinBarNC:LoupeBorder"
-	vim.wo[win].winbar = "─ Loupe "
+	win.set(winid, {
+		winfixheight = true,
+		number = false,
+		relativenumber = false,
+		signcolumn = "no",
+		wrap = false,
+		cursorline = true,
+		foldenable = false,
+		spell = false,
+		list = false,
+		scrolloff = 0,
+		winhighlight = "Normal:Normal,WinBar:LoupeBorder,WinBarNC:LoupeBorder",
+		winbar = "─ Loupe ",
+	})
 
-	return { win = win, buf = buf }
+	return { win = winid, buf = bufnr }
 end
 
 --- Build the header line (prompt, query, caret, action hint) plus the prefix
