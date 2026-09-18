@@ -10,9 +10,11 @@
 --- mirrors the editor's gutter/wrap options, so buffer tabs stay visible and
 --- line numbers line up with regular windows.
 
+local preview = require("ui.preview")
+
 local M = {}
 
-local P = { win = nil, buf = nil, ft = nil, path = nil }
+local P = { win = nil, buf = nil, path = nil }
 
 --- Rows occupied by the tabline (showtabline=2, or 1 with multiple tabs).
 local function tabline_rows()
@@ -30,39 +32,6 @@ local function geometry(drawer_win)
 	local top = tabline_rows()
 	local row = vim.api.nvim_win_get_position(drawer_win)[1]
 	return top, math.max(1, row - top)
-end
-
---- NUL byte in the first chunk => binary (same heuristic as the LSP picker).
-local function is_file_text(path)
-	local fd = vim.uv.fs_open(path, "r", 438)
-	if not fd then
-		return nil
-	end
-	local data = vim.uv.fs_read(fd, 1024) or ""
-	vim.uv.fs_close(fd)
-	return not data:find("\0")
-end
-
--- Skip highlighting for huge previews (same bounds as mini.pick / the LSP picker).
-local function should_highlight(buf)
-	local n = vim.api.nvim_buf_line_count(buf)
-	local size = vim.api.nvim_buf_get_offset(buf, n)
-	return size <= 1000000 and size <= 1000 * n
-end
-
---- Treesitter when a parser exists, native syntax otherwise. Deliberately does
---- NOT set 'filetype': no FileType autocmds (LSP attach, indentation, ...) must
---- fire for a preview buffer.
-local function apply_highlight(ft)
-	local has_lang, lang = pcall(vim.treesitter.language.get_lang, ft)
-	lang = has_lang and lang or ft
-	local has_parser = pcall(vim.treesitter.get_parser, P.buf, lang, { error = false })
-	if has_parser then
-		has_parser = pcall(vim.treesitter.start, P.buf, lang)
-	end
-	if not has_parser then
-		vim.bo[P.buf].syntax = ft
-	end
 end
 
 local function set_lines(lines)
@@ -165,34 +134,27 @@ function M.show(path, opts)
 	P.path = path
 	local max_lines = (opts and opts.max_lines) or 2000
 
-	if is_file_text(path) == false then
+	if preview.is_text(path) == false then
 		set_lines({ "-binary file-" })
 		reset_view()
 		return
 	end
 
-	local ok, lines = pcall(vim.fn.readfile, path, "", max_lines + 1)
-	if not ok then
+	local lines, _, truncated = preview.read(path, max_lines)
+	if not lines then
 		set_lines({ "-cannot read file-" })
 		reset_view()
 		return
 	end
-	if #lines > max_lines then
-		lines = vim.list_slice(lines, 1, max_lines)
+	if truncated then
 		lines[#lines + 1] = ""
 		lines[#lines + 1] = ("-- truncated at %d lines --"):format(max_lines)
 	end
 
 	set_lines(lines)
 
-	local ft = vim.filetype.match({ filename = path }) or ""
-	pcall(vim.treesitter.stop, P.buf)
-	if P.ft ~= ft then
-		vim.bo[P.buf].syntax = ft
-		P.ft = ft
-	end
-	if ft ~= "" and should_highlight(P.buf) then
-		apply_highlight(ft)
+	if preview.should_highlight(P.buf) then
+		preview.highlight(P.buf, vim.filetype.match({ filename = path }) or "")
 	end
 	reset_view()
 end
@@ -215,7 +177,6 @@ function M.close()
 		pcall(vim.api.nvim_buf_delete, P.buf, { force = true })
 	end
 	P.buf = nil
-	P.ft = nil
 	P.path = nil
 end
 

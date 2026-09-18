@@ -2,6 +2,7 @@
 --- quickfix collection and mini.pick helpers.
 
 local hl = require("ui.hl")
+local preview = require("ui.preview")
 
 local M = {}
 
@@ -169,46 +170,9 @@ local function choose_symbols_marked(items_marked)
 	end)
 end
 
---- Highlight a preview scratch buffer: treesitter when a parser is available,
---- else native Vim syntax (mirrors mini.pick's preview_set_lines).
-local function highlight_preview(buf_id, ft)
-	if not ft then
-		return
-	end
-	local has_lang, lang = pcall(vim.treesitter.language.get_lang, ft)
-	lang = has_lang and lang or ft
-	local has_parser, parser = pcall(vim.treesitter.get_parser, buf_id, lang, { error = false })
-	has_parser = has_parser and parser ~= nil
-	if has_parser then
-		has_parser = pcall(vim.treesitter.start, buf_id, lang)
-	end
-	if not has_parser then
-		vim.bo[buf_id].syntax = ft
-	end
-end
-
--- Skip highlighting for huge previews (same bounds as mini.pick).
-local function preview_should_highlight(buf_id)
-	local n = vim.api.nvim_buf_line_count(buf_id)
-	local size = vim.api.nvim_buf_get_offset(buf_id, n)
-	return size <= 1000000 and size <= 1000 * n
-end
-
 --- Context lines shown around the symbol's line in the preview.
 local function preview_n_context()
 	return 2 * vim.o.lines
-end
-
---- True if the file has no NUL byte in its first chunk (mirrors mini.pick's
---- is_file_text); nil when the file can't be opened.
-local function is_file_text(path)
-	local fd = vim.uv.fs_open(path, "r", 438)
-	if not fd then
-		return nil
-	end
-	local data = vim.uv.fs_read(fd, 1024) or ""
-	vim.uv.fs_close(fd)
-	return not data:find("\0")
 end
 
 --- Preview header: file:line, kind, name (with parent chain when present).
@@ -268,12 +232,12 @@ local function preview_symbol(buf_id, item)
 	if v.filename and (not v.buf or vim.api.nvim_buf_get_name(v.buf) ~= v.filename) then
 		-- Cross-file (workspace picker): bounded read around the target line.
 		local title = preview_title(v)
-		if is_file_text(v.filename) == false then
+		if preview.is_text(v.filename) == false then
 			vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, { title, "-Non-text-file-" })
 			return
 		end
-		local ok_read, file_lines = pcall(vim.fn.readfile, v.filename, "", lnum + 1 + n_ctx)
-		if not ok_read or type(file_lines) ~= "table" then
+		local file_lines = preview.read(v.filename, lnum + 1 + n_ctx)
+		if not file_lines then
 			vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, { title, "-No-access-" })
 			return
 		end
@@ -298,8 +262,8 @@ local function preview_symbol(buf_id, item)
 	hl_row = math.max(1, math.min(hl_row, #lines - 1))
 
 	vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
-	if preview_should_highlight(buf_id) then
-		highlight_preview(buf_id, ft)
+	if preview.should_highlight(buf_id) then
+		preview.highlight(buf_id, ft)
 	end
 	vim.api.nvim_buf_clear_namespace(buf_id, preview_ns, 0, -1)
 	hl.eol(buf_id, preview_ns, 0, 0, "MiniPickHeader", { priority = 200 })
