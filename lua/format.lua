@@ -6,6 +6,8 @@
 
 local M = {}
 
+local proc = require("util.proc")
+
 local FORMATTERS = {
 	lua = { { cmd = { "stylua", "-" } } },
 	rust = { { cmd = { "rustfmt", "--emit", "stdout" } } },
@@ -14,14 +16,11 @@ local FORMATTERS = {
 
 --- Pipe `lines` through one formatter process; return new lines.
 local function pipe(lines, fmt)
-	local output = vim.system(fmt.cmd, {
-		stdin = table.concat(lines, "\n"),
-		text = true,
-	}):wait()
-	if output.code ~= 0 then
-		error(("%s failed (%d): %s"):format(fmt.cmd[1], output.code, vim.trim(output.stderr or "")))
+	local out, err = proc.sync(fmt.cmd, { stdin = table.concat(lines, "\n") })
+	if not out then
+		error(("%s failed: %s"):format(fmt.cmd[1], err))
 	end
-	return vim.split(vim.trim(output.stdout or ""), "\n", { trimempty = true })
+	return vim.split(vim.trim(out), "\n", { trimempty = true })
 end
 
 --- Replace `lines` into `bufnr` between `row1`/`row2` (0-indexed, inclusive),

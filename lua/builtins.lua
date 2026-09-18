@@ -1,5 +1,6 @@
 local status = require("ui.status")
 local map = require("util").map
+local proc = require("util.proc")
 
 -- 0.12 built-in undo tree.
 vim.cmd("packadd nvim.undotree")
@@ -40,15 +41,15 @@ vim.api.nvim_create_user_command("Gdiff", function()
 		return
 	end
 	-- git show resolves paths from the repo root, so prepend the cwd prefix.
-	local prefix = vim.system({ "git", "rev-parse", "--show-prefix" }, { text = true }):wait()
-	if prefix.code ~= 0 then
-		vim.notify("Gdiff: not a git repository", vim.log.levels.ERROR)
+	local prefix, perr = proc.sync({ "git", "rev-parse", "--show-prefix" })
+	if not prefix then
+		vim.notify("Gdiff: " .. (perr or "not a git repository"), vim.log.levels.ERROR)
 		return
 	end
-	local repo_path = prefix.stdout:gsub("%s+$", "") .. rel
-	local result = vim.system({ "git", "show", "HEAD:" .. repo_path }, { text = true }):wait()
-	if result.code ~= 0 then
-		vim.notify("Gdiff: " .. (result.stderr or ""):gsub("%s+$", ""), vim.log.levels.ERROR)
+	local repo_path = vim.trim(prefix) .. rel
+	local out, oerr = proc.sync({ "git", "show", "HEAD:" .. repo_path })
+	if not out then
+		vim.notify("Gdiff: " .. (oerr or "git show failed"), vim.log.levels.ERROR)
 		return
 	end
 
@@ -58,7 +59,7 @@ vim.api.nvim_create_user_command("Gdiff", function()
 	vim.bo.bufhidden = "wipe"
 	vim.bo.filetype = orig_ft
 	vim.api.nvim_buf_set_name(0, rel .. " (HEAD)")
-	local lines = vim.split(result.stdout, "\n", { plain = true })
+	local lines = vim.split(out, "\n", { plain = true })
 	if lines[#lines] == "" then
 		lines[#lines] = nil -- git show output ends with a newline
 	end

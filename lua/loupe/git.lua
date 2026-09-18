@@ -6,6 +6,8 @@
 
 local M = {}
 
+local proc = require("util.proc")
+
 local function tokens(s)
 	local out, i = {}, 1
 	while true do
@@ -44,34 +46,35 @@ end
 
 --- Call `on_done(map)` with `map[rel] = { text, hl }` (empty when not a repo).
 function M.status(root, on_done)
-	local ok = pcall(vim.system, { "git", "status", "--porcelain", "-z", "--untracked-files=all" }, {
-		cwd = root,
-		text = true,
-	}, function(res)
-		if res.code ~= 0 then
-			vim.schedule(function()
-				on_done({})
-			end)
-			return
-		end
-		local map = {}
-		local toks = tokens(res.stdout or "")
-		local i = 1
-		while i <= #toks do
-			local entry = toks[i]
-			local xy = entry:sub(1, 2)
-			local path = entry:sub(4)
-			local info = classify(xy)
-			if info and path ~= "" then
-				map[path] = info
+	local ok = proc.async(
+		{ "git", "status", "--porcelain", "-z", "--untracked-files=all" },
+		{ cwd = root },
+		function(res)
+			if res.code ~= 0 then
+				vim.schedule(function()
+					on_done({})
+				end)
+				return
 			end
-			-- rename/copy records carry the original path as the next token
-			i = i + (xy:find("[RC]") and 2 or 1)
+			local map = {}
+			local toks = tokens(res.stdout or "")
+			local i = 1
+			while i <= #toks do
+				local entry = toks[i]
+				local xy = entry:sub(1, 2)
+				local path = entry:sub(4)
+				local info = classify(xy)
+				if info and path ~= "" then
+					map[path] = info
+				end
+				-- rename/copy records carry the original path as the next token
+				i = i + (xy:find("[RC]") and 2 or 1)
+			end
+			vim.schedule(function()
+				on_done(map)
+			end)
 		end
-		vim.schedule(function()
-			on_done(map)
-		end)
-	end)
+	)
 	if not ok then
 		on_done({})
 	end

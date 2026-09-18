@@ -12,6 +12,7 @@
 --- The fff path falls back to ripgrep when fff is not installed.
 
 local config = require("loupe.config")
+local proc = require("util.proc")
 
 local M = {}
 
@@ -57,7 +58,7 @@ local function run_async(root, cmds, i, dir, on_done)
 		on_done({})
 		return
 	end
-	local ok = pcall(vim.system, cmds[i], { cwd = root, text = true }, function(res)
+	local ok = proc.async(cmds[i], { cwd = root }, function(res)
 		if res.code ~= 0 then
 			run_async(root, cmds, i + 1, dir, on_done)
 			return
