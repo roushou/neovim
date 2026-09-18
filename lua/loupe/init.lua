@@ -17,6 +17,7 @@ local preview = require("loupe.preview")
 local frecency = require("loupe.frecency")
 local git = require("loupe.git")
 local action = require("loupe.action")
+local tf = require("util.textfield")
 
 local M = {}
 
@@ -106,54 +107,17 @@ local function is_printable(ch, key)
 	return b ~= nil and b >= 32 and b ~= 127
 end
 
-local function strchars(s)
-	return vim.fn.strchars(s)
-end
-
---- Insert `ch` at the character caret position.
-local function field_insert(text, caret, ch)
-	caret = math.max(0, math.min(caret, strchars(text)))
-	return vim.fn.strcharpart(text, 0, caret) .. ch .. vim.fn.strcharpart(text, caret), caret + strchars(ch)
-end
-
---- Delete the character before the caret.
-local function field_backspace(text, caret)
-	caret = math.max(0, math.min(caret, strchars(text)))
-	if caret == 0 then
-		return text, 0
-	end
-	return vim.fn.strcharpart(text, 0, caret - 1) .. vim.fn.strcharpart(text, caret), caret - 1
-end
-
---- Delete the character under the caret.
-local function field_delete(text, caret)
-	caret = math.max(0, math.min(caret, strchars(text)))
-	if caret >= strchars(text) then
-		return text, caret
-	end
-	return vim.fn.strcharpart(text, 0, caret) .. vim.fn.strcharpart(text, caret + 1), caret
-end
-
---- Delete the word before the caret.
-local function field_delete_word(text, caret)
-	caret = math.max(0, math.min(caret, strchars(text)))
-	local before = vim.fn.strcharpart(text, 0, caret)
-	local after = vim.fn.strcharpart(text, caret)
-	before = before:gsub("%s*%S+%s*$", "")
-	return before .. after, strchars(before)
-end
-
 --- Replace the query, reset the selection and refilter (caller redraws).
 local function set_query(text, caret)
 	S.query = text
-	S.caret = caret or strchars(text)
+	S.caret = caret or tf.len(text)
 	S.index = 1
 	refresh()
 end
 
 local function start_prompt(label, value, name)
 	value = value or ""
-	S.prompt = { label = label, value = value, action = name, caret = strchars(value) }
+	S.prompt = { label = label, value = value, action = name, caret = tf.len(value) }
 end
 
 --- Run a committed action by name and refresh the view.
@@ -307,23 +271,23 @@ local function handle_prompt(ch, key)
 	elseif key == "<Esc>" or key == "<C-C>" then
 		S.prompt = nil
 	elseif key == "<BS>" then
-		p.value, p.caret = field_backspace(p.value, p.caret)
+		p.value, p.caret = tf.backspace(p.value, p.caret)
 	elseif key == "<Del>" then
-		p.value, p.caret = field_delete(p.value, p.caret)
+		p.value, p.caret = tf.delete(p.value, p.caret)
 	elseif key == "<C-W>" then
-		p.value, p.caret = field_delete_word(p.value, p.caret)
+		p.value, p.caret = tf.delete_word(p.value, p.caret)
 	elseif key == "<C-U>" then
 		p.value, p.caret = "", 0
 	elseif key == "<Left>" or key == "<C-B>" then
 		p.caret = math.max(0, p.caret - 1)
 	elseif key == "<Right>" or key == "<C-F>" then
-		p.caret = math.min(strchars(p.value), p.caret + 1)
+		p.caret = math.min(tf.len(p.value), p.caret + 1)
 	elseif key == "<Home>" or key == "<C-A>" then
 		p.caret = 0
 	elseif key == "<End>" or key == "<C-E>" then
-		p.caret = strchars(p.value)
+		p.caret = tf.len(p.value)
 	elseif is_printable(ch, key) then
-		p.value, p.caret = field_insert(p.value, p.caret, ch)
+		p.value, p.caret = tf.insert(p.value, p.caret, ch)
 	end
 end
 
@@ -385,21 +349,21 @@ local function handle_normal(ch, key)
 		S.git = nil
 		reload()
 	elseif key == "<C-W>" then
-		set_query(field_delete_word(S.query, S.caret))
+		set_query(tf.delete_word(S.query, S.caret))
 	elseif key == "<BS>" then
-		set_query(field_backspace(S.query, S.caret))
+		set_query(tf.backspace(S.query, S.caret))
 	elseif key == "<Del>" then
-		set_query(field_delete(S.query, S.caret))
+		set_query(tf.delete(S.query, S.caret))
 	elseif key == "<Left>" or key == "<C-B>" then
 		S.caret = math.max(0, S.caret - 1)
 	elseif key == "<Right>" or key == "<C-F>" then
-		S.caret = math.min(strchars(S.query), S.caret + 1)
+		S.caret = math.min(tf.len(S.query), S.caret + 1)
 	elseif key == "<Home>" or key == "<C-A>" then
 		S.caret = 0
 	elseif key == "<End>" or key == "<C-E>" then
-		S.caret = strchars(S.query)
+		S.caret = tf.len(S.query)
 	elseif is_printable(ch, key) then
-		set_query(field_insert(S.query, S.caret, ch))
+		set_query(tf.insert(S.query, S.caret, ch))
 	end
 	return false
 end
