@@ -2,7 +2,7 @@ local h = require("tests.harness")
 local source = require("loupe.source")
 
 h.test("built-in sources are registered", function()
-	for _, name in ipairs({ "files", "dirs", "buffers", "recent", "changed" }) do
+	for _, name in ipairs({ "files", "dirs", "buffers", "recent", "changed", "grep", "symbols" }) do
 		local s = source.get(name)
 		h.ok(s, name .. " missing")
 		h.eq(s.name, name)
@@ -43,6 +43,51 @@ end)
 h.test("load reports failure when no backend is available", function()
 	local got
 	source.load({ name = "nope", list = "nope", backend = { "ghost" } }, "/r", function(cands, ok)
+		got = { cands, ok }
+	end)
+	h.eq(got, { {}, false })
+end)
+
+h.test("search dispatches a function source", function()
+	local fake = {
+		name = "fake_search",
+		search = function(q, ctx, cb)
+			cb({ { rel = q .. ctx.root } }, true)
+		end,
+	}
+	local got
+	source.search(fake, "x", { root = "/r" }, function(cands, ok)
+		got = { cands, ok }
+	end)
+	h.eq(got[1][1].rel, "x/r")
+end)
+
+h.test("search resolves a backend search op", function()
+	local backend = require("loupe.backend")
+	backend.registry.srchfake = {
+		search = {
+			srop = function(q, _, cb)
+				cb({ { rel = q } }, true)
+			end,
+		},
+	}
+	local got
+	source.search(
+		{ name = "srop", search = "srop", backend = { "srchfake" } },
+		"q",
+		{ root = "/r" },
+		function(cands, ok)
+			got = { cands, ok }
+		end
+	)
+	h.eq(got[1][1].rel, "q")
+	h.eq(got[2], true)
+	backend.registry.srchfake = nil
+end)
+
+h.test("search reports failure when no backend is available", function()
+	local got
+	source.search({ name = "nope", search = "nope", backend = { "ghost" } }, "q", { root = "/r" }, function(cands, ok)
 		got = { cands, ok }
 	end)
 	h.eq(got, { {}, false })

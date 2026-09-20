@@ -17,20 +17,29 @@ M.registry.rg = require("loupe.backend.rg")
 M.registry.git = require("loupe.backend.git")
 M.registry.nvim = require("loupe.backend.nvim")
 M.registry.internal = require("loupe.backend.internal")
+M.registry.lsp = require("loupe.backend.lsp")
 
---- A backend is available when it declares no exe or its exe is on PATH.
+--- A backend is available when its `available()` hook passes, or it declares
+--- no exe, or its exe is on PATH.
 local function available(b)
-	return b ~= nil and (b.exe == nil or vim.fn.executable(b.exe) == 1)
+	if b == nil then
+		return false
+	end
+	if b.available then
+		return b.available()
+	end
+	return b.exe == nil or vim.fn.executable(b.exe) == 1
 end
 
---- First available backend exposing `list[op]`.
+--- First available backend exposing `kind[op]` (`kind` is "list" or "search").
 --- @return string|nil id, function|nil fn
-function M.resolve(op, prefs)
+function M.resolve(op, prefs, kind)
+	kind = kind or "list"
 	prefs = prefs or (config.get().backends and config.get().backends[op]) or {}
 	for _, id in ipairs(prefs) do
 		local b = M.registry[id]
-		if available(b) and b.list and b.list[op] then
-			return id, b.list[op]
+		if available(b) and b[kind] and b[kind][op] then
+			return id, b[kind][op]
 		end
 	end
 	return nil, nil

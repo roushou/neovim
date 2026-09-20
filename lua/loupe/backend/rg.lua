@@ -16,4 +16,34 @@ M.list = {
 	end,
 }
 
+M.search = {
+	--- Live content search. `--vimgrep` gives path:line:col:text; smart-case
+	--- keeps lowercase queries case-insensitive without extra config.
+	grep = function(query, ctx, cb)
+		if query == "" then
+			cb({}, true)
+			return
+		end
+		run.raw(
+			{
+				"rg",
+				"--vimgrep",
+				"--no-heading",
+				"--color",
+				"never",
+				"--smart-case",
+				"--max-count",
+				"30",
+				"--",
+				query,
+			},
+			ctx.root,
+			function(stdout)
+				return parse.vimgrep(stdout, ctx.root)
+			end,
+			cb
+		)
+	end,
+}
+
 return M

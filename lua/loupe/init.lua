@@ -19,11 +19,13 @@ local frecency = require("loupe.frecency")
 local git = require("loupe.git")
 local action = require("loupe.action")
 local tf = require("util.textfield")
+local debounce = require("util.debounce")
 local input = require("loupe.input")
 
 local M = {}
 
 local S = nil
+local run_search
 
 local function active()
 	return S ~= nil and S.active
@@ -43,12 +45,37 @@ local function page()
 	return 10
 end
 
-local function refresh()
-	S.matches = backend.match(S.query, S.candidates, config.get().max_results, { root = S.root, mode = S.source.name })
-	if #S.matches == 0 then
+--- Wrap raw dynamic results as matches (no client-side ranking).
+local function wrap(cands)
+	local out = {}
+	local max = config.get().max_results
+	for i = 1, math.min(max, #cands) do
+		out[i] = { cand = cands[i], positions = {} }
+	end
+	return out
+end
+
+--- Recompute matches for the current query. Static sources are ranked locally;
+--- dynamic sources (grep/symbols) re-query the backend, debounced unless
+--- `immediate` is set.
+local function refresh(immediate)
+	S.gen = S.gen + 1
+	if S.source.search then
+		if immediate then
+			S.search_timer:cancel()
+			run_search()
+		else
+			S.search_timer:call()
+		end
+		return
+	end
+	local matches =
+		backend.match(S.query, S.candidates, config.get().max_results, { root = S.root, mode = S.source.name })
+	S.matches = matches
+	if #matches == 0 then
 		S.index = 0
-	elseif S.index > #S.matches then
-		S.index = #S.matches
+	elseif S.index > #matches then
+		S.index = #matches
 	end
 end
 
@@ -71,7 +98,11 @@ local function update_preview()
 	local item = current()
 	if item then
 		preview.ensure_open(S.drawer_win, S.preview_opts)
-		preview.show(item.cand.abs, cfg.preview)
+		preview.show(item.cand.abs, {
+			max_lines = cfg.preview.max_lines,
+			lnum = item.cand.lnum,
+			col = item.cand.col,
+		})
 	elseif preview.is_open() then
 		preview.clear()
 	end
@@ -82,6 +113,33 @@ local function render()
 	-- the stale preview and it only catches up on the next keypress.
 	update_preview()
 	drawer.render(S, config.get())
+end
+
+--- Fire the active dynamic source's search and apply the results.
+run_search = function()
+	if not active() then
+		return
+	end
+	local session = S
+	if not session.source.search then
+		return
+	end
+	local gen = session.gen
+	local root, src, query = session.root, session.source, session.query
+	source.search(src, query, { root = root, buf = session.origin_buf, name = src.name }, function(cands)
+		if S ~= session or session.gen ~= gen or session.root ~= root or session.source ~= src then
+			return
+		end
+		session.candidates = cands
+		session.loaded = true
+		session.matches = wrap(cands)
+		if #session.matches == 0 then
+			session.index = 0
+		elseif session.index > #session.matches then
+			session.index = #session.matches
+		end
+		render()
+	end)
 end
 
 local function move(delta)
@@ -160,12 +218,21 @@ local function reload()
 	S.loaded = false
 	S.matches = {}
 	S.index = 0
+	if S.search_timer then
+		S.search_timer:cancel()
+	end
 	drawer.render(S, cfg)
 	vim.cmd("redraw")
 
+	local session = S
 	local root, src = S.root, S.source
+	if src.search then
+		refresh(true)
+		return
+	end
+
 	source.load(src, root, function(cands)
-		if not active() or S.root ~= root or S.source ~= src then
+		if S ~= session or S.root ~= root or S.source ~= src then
 			return
 		end
 		if cfg.frecency and src.name == "files" then
@@ -179,7 +246,7 @@ local function reload()
 
 	if cfg.git and src.name == "files" then
 		git.status(root, function(map)
-			if active() and S.root == root then
+			if S == session and S.root == root then
 				S.git = map
 				render()
 			end
@@ -195,6 +262,9 @@ function M.close()
 	local origin = S.origin_win
 	local guicursor = S.guicursor
 	S.active = false
+	if S.search_timer then
+		S.search_timer:close()
+	end
 	if S.augroup then
 		pcall(vim.api.nvim_del_augroup_by_id, S.augroup)
 	end
@@ -292,6 +362,8 @@ function M.open()
 		active = true,
 		loaded = false,
 		origin_win = origin,
+		origin_buf = vim.api.nvim_win_get_buf(origin),
+		gen = 0,
 		root = cfg.root(),
 		source = source.get(cfg.default_source or "files") or source.get("files"),
 		candidates = {},
@@ -313,6 +385,11 @@ function M.open()
 			list = vim.wo[origin].list,
 		},
 	}
+
+	-- Debounced driver for dynamic sources (grep/symbols).
+	S.search_timer = debounce.new(80, function()
+		run_search()
+	end)
 
 	local height = type(cfg.height) == "function" and cfg.height() or cfg.height
 	local d = drawer.open(height)

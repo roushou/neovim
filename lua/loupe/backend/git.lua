@@ -22,4 +22,17 @@ M.list = {
 	end,
 }
 
+M.search = {
+	--- Fallback content search (`git grep` uses basic regex, no columns).
+	grep = function(query, ctx, cb)
+		if query == "" then
+			cb({}, true)
+			return
+		end
+		run.raw({ "git", "grep", "-n", "--no-color", "-e", query }, ctx.root, function(stdout)
+			return parse.gitgrep(stdout, ctx.root)
+		end, cb)
+	end,
+}
+
 return M

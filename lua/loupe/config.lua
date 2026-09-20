@@ -37,6 +37,8 @@ M.defaults = {
 		changed = { "git" },
 		buffers = { "nvim" },
 		recent = { "internal" },
+		grep = { "rg", "git" },
+		symbols = { "lsp" },
 	},
 
 	--- Preview options.
@@ -115,6 +117,8 @@ M.defaults = {
 			["b"] = "buffers",
 			["r"] = "recent",
 			["c"] = "changed",
+			["g"] = "grep",
+			["s"] = "symbols",
 		},
 		prompt = {
 			["<CR>"] = "submit",

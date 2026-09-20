@@ -57,3 +57,33 @@ h.test("status preserves paths with spaces", function()
 	local out = parse.status("?? my file.lua\0", "/r")
 	h.eq(out[1].rel, "my file.lua")
 end)
+
+h.test("vimgrep parses path:line:col:text", function()
+	local out = parse.vimgrep("lua/a.lua:12:5:local M = {}\n", "/r")
+	h.eq(#out, 1)
+	h.eq(out[1], {
+		rel = "lua/a.lua",
+		abs = "/r/lua/a.lua",
+		label = "lua/a.lua:12: local M = {}",
+		lnum = 12,
+		col = 4,
+		dir = false,
+	})
+end)
+
+h.test("vimgrep tolerates empty output", function()
+	h.eq(parse.vimgrep("", "/r"), {})
+end)
+
+h.test("gitgrep parses path:line:text with column 0", function()
+	local out = parse.gitgrep("lua/a.lua:12:local M = {}\n", "/r")
+	h.eq(#out, 1)
+	h.eq(out[1], {
+		rel = "lua/a.lua",
+		abs = "/r/lua/a.lua",
+		label = "lua/a.lua:12: local M = {}",
+		lnum = 12,
+		col = 0,
+		dir = false,
+	})
+end)

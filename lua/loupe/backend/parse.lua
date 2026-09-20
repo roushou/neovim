@@ -78,4 +78,42 @@ function M.status(stdout, root)
 	return out
 end
 
+--- Parse `rg --vimgrep` output (`path:line:col:text`) into candidates.
+function M.vimgrep(stdout, root)
+	local out = {}
+	for _, line in ipairs(run.lines(stdout)) do
+		local rel, lnum, col, text = line:match("^(.-):(%d+):(%d+):(.*)$")
+		if rel then
+			out[#out + 1] = {
+				rel = rel,
+				abs = root .. "/" .. rel,
+				label = rel .. ":" .. lnum .. ": " .. text,
+				lnum = tonumber(lnum),
+				col = tonumber(col) - 1,
+				dir = false,
+			}
+		end
+	end
+	return out
+end
+
+--- Parse `git grep -n` output (`path:line:text`) into candidates (no column).
+function M.gitgrep(stdout, root)
+	local out = {}
+	for _, line in ipairs(run.lines(stdout)) do
+		local rel, lnum, text = line:match("^(.-):(%d+):(.*)$")
+		if rel then
+			out[#out + 1] = {
+				rel = rel,
+				abs = root .. "/" .. rel,
+				label = rel .. ":" .. lnum .. ": " .. text,
+				lnum = tonumber(lnum),
+				col = 0,
+				dir = false,
+			}
+		end
+	end
+	return out
+end
+
 return M

@@ -28,6 +28,14 @@ function M.new(ms, fn)
 		timer:stop()
 	end
 
+	--- Release the underlying timer. Do not use the caller afterwards.
+	function api:close()
+		timer:stop()
+		if not timer:is_closing() then
+			timer:close()
+		end
+	end
+
 	return api
 end
 

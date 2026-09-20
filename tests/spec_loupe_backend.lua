@@ -82,3 +82,19 @@ h.test("resolve_list reports failure when exhausted", function()
 	end)
 	h.eq(got, { {}, false })
 end)
+
+h.test("resolve can select a search op", function()
+	backend.registry.searchfake = { search = { grep = function() end } }
+	local id, fn = backend.resolve("grep", { "searchfake" }, "search")
+	h.eq(id, "searchfake")
+	h.ok(fn)
+	backend.registry.searchfake = nil
+end)
+
+h.test("resolve defaults to the list kind", function()
+	backend.registry.kindfake = { list = { files = function() end }, search = { files = function() end } }
+	local id, fn = backend.resolve("files", { "kindfake" })
+	h.eq(id, "kindfake")
+	h.ok(fn)
+	backend.registry.kindfake = nil
+end)

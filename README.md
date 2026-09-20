@@ -86,7 +86,7 @@ It's registered and enabled automatically. Shared defaults (completion capabilit
 | `<leader>sw`  | LSP workspace symbols     |
 | `<C-h/j/k/l>` | Navigate windows          |
 
-Inside Loupe (`<C-p>`): `<CR>` open, `<C-s>`/`<C-v>`/`<C-t>` open in split/vsplit/tab, `<C-o>` source menu (`f` files, `d` dirs, `b` buffers, `r` recent, `c` changed), `<C-x>` action prefix (`r` rename/move, `d` delete, `a` add, `y` yank path), `<Left>`/`<Right>` (or `<C-b>`/`<C-f>`) move the query caret, `<Home>`/`<End>` (or `<C-a>`/`<C-e>`) jump, `<BS>`/`<Del>`/`<C-w>` edit, `<C-d>`/`<C-u>` page, mouse click/double-click/wheel.
+Inside Loupe (`<C-p>`): `<CR>` open, `<C-s>`/`<C-v>`/`<C-t>` open in split/vsplit/tab, `<C-o>` source menu (`f` files, `d` dirs, `b` buffers, `r` recent, `c` changed, `g` live grep, `s` workspace symbols), `<C-x>` action prefix (`r` rename/move, `d` delete, `a` add, `y` yank path), `<Left>`/`<Right>` (or `<C-b>`/`<C-f>`) move the query caret, `<Home>`/`<End>` (or `<C-a>`/`<C-e>`) jump, `<BS>`/`<Del>`/`<C-w>` edit, `<C-d>`/`<C-u>` page, mouse click/double-click/wheel. `grep` and `symbols` are live: each keystroke re-queries (debounced), and the preview jumps to the match.
 
 Bindings are data, not code. Override any of them (in `browse`, `menu`, `sources`, or `prompt`) via `setup`, e.g. `require("loupe").setup({ mappings = { browse = { ["<CR>"] = "split" } } })`; set a value to `false` to unbind. See `lua/loupe/config.lua` for the full action set.
 

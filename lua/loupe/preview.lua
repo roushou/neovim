@@ -42,10 +42,19 @@ local function set_lines(lines)
 	vim.bo[P.buf].modifiable = false
 end
 
-local function reset_view()
-	if P.win and vim.api.nvim_win_is_valid(P.win) then
-		vim.api.nvim_win_set_cursor(P.win, { 1, 0 })
+--- Move the preview cursor to `lnum`/`col` (byte) and center it.
+local function position(lnum, col)
+	if not (P.win and vim.api.nvim_win_is_valid(P.win) and P.buf and vim.api.nvim_buf_is_valid(P.buf)) then
+		return
 	end
+	local count = vim.api.nvim_buf_line_count(P.buf)
+	local row = math.max(1, math.min(lnum or 1, count))
+	local line = vim.api.nvim_buf_get_lines(P.buf, row - 1, row, false)[1] or ""
+	local c = math.max(0, math.min(col or 0, #line))
+	vim.api.nvim_win_set_cursor(P.win, { row, c })
+	vim.api.nvim_win_call(P.win, function()
+		vim.cmd("normal! zz")
+	end)
 end
 
 --- Whether the preview float is currently open.
@@ -122,28 +131,34 @@ function M.resize(drawer_win)
 	})
 end
 
---- Render `path` into the preview buffer.
+--- Render `path` into the preview buffer, jumping to `opts.lnum`/`opts.col`.
 function M.show(path, opts)
+	opts = opts or {}
 	if not (P.buf and vim.api.nvim_buf_is_valid(P.buf)) then
 		return
 	end
-	-- Selection unchanged: keep the current rendering (content is read once).
+
+	local lnum = opts.lnum or 1
+	local col = opts.col or 0
+
+	-- Same file already rendered: reposition without re-reading it.
 	if path == P.path then
+		position(lnum, col)
 		return
 	end
 	P.path = path
-	local max_lines = (opts and opts.max_lines) or 2000
+	local max_lines = opts.max_lines or 2000
 
 	if preview.is_text(path) == false then
 		set_lines({ "-binary file-" })
-		reset_view()
+		position(1, 0)
 		return
 	end
 
 	local lines, _, truncated = preview.read(path, max_lines)
 	if not lines then
 		set_lines({ "-cannot read file-" })
-		reset_view()
+		position(1, 0)
 		return
 	end
 	if truncated then
@@ -156,7 +171,7 @@ function M.show(path, opts)
 	if preview.should_highlight(P.buf) then
 		preview.highlight(P.buf, vim.filetype.match({ filename = path }) or "")
 	end
-	reset_view()
+	position(lnum, col)
 end
 
 --- Clear the preview (no selection).
