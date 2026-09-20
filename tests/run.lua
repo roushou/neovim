@@ -11,6 +11,7 @@ for _, spec in ipairs({
 	"tests.spec_ui_preview",
 	"tests.spec_loupe_backend",
 	"tests.spec_loupe_icons",
+	"tests.spec_loupe_keymap",
 	"tests.spec_loupe_action",
 }) do
 	require(spec)

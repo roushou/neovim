@@ -88,6 +88,8 @@ It's registered and enabled automatically. Shared defaults (completion capabilit
 
 Inside Loupe (`<C-p>`): `<CR>` open, `<C-s>`/`<C-v>`/`<C-t>` open in split/vsplit/tab, `<C-o>` toggle files/directories, `<C-x>` action prefix (`r` rename/move, `d` delete, `a` add, `y` yank path), `<Left>`/`<Right>` (or `<C-b>`/`<C-f>`) move the query caret, `<Home>`/`<End>` (or `<C-a>`/`<C-e>`) jump, `<BS>`/`<Del>`/`<C-w>` edit, `<C-d>`/`<C-u>` page, mouse click/double-click/wheel.
 
+Bindings are data, not code. Override any of them (in `browse`, `menu`, or `prompt`) via `setup`, e.g. `require("loupe").setup({ mappings = { browse = { ["<CR>"] = "split" } } })`; set a value to `false` to unbind. See `lua/loupe/config.lua` for the full action set.
+
 ## Health & tests
 
 `:checkhealth loupe` reports external tools (`rg`/`fd`/`git`), the configured backend, and the resolved project root.

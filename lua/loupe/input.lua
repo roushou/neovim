@@ -4,11 +4,17 @@
 --- them to session operations supplied via `ctx`. This module owns only that
 --- layer, keeping the quirky input handling out of the session logic.
 ---
+--- Bindings are data, not code: `config.mappings` maps key notation to action
+--- names (see `loupe.keymap` and the defaults in `loupe.config`). Each context
+--- below is a thin interpreter over that map.
+---
 --- `ctx` fields: `state` (session table), `is_active`, `render`, `close`,
 --- `choose`, `reload`, `refresh`, `move`, `page`, `current`, `set_query`,
 --- `start_prompt`, `run_action`, `mouse_select`, `yank`.
 
 local tf = require("util.textfield")
+local config = require("loupe.config")
+local keymap = require("loupe.keymap")
 
 local M = {}
 
@@ -26,108 +32,111 @@ local function is_printable(ch, key)
 end
 
 --- One key while an inline prompt (rename/delete/create) is active.
-local function handle_prompt(ctx, ch, key)
+local function handle_prompt(ctx, map, ch, key)
 	local S = ctx.state
 	local p = S.prompt
-	if key == "<CR>" then
+	local action = map[key]
+	if action == "submit" then
 		local value, name = p.value, p.action
 		S.prompt = nil
 		ctx.run_action(name, value)
-	elseif key == "<Esc>" or key == "<C-C>" then
+	elseif action == "cancel" then
 		S.prompt = nil
-	elseif key == "<BS>" then
+	elseif action == "backspace" then
 		p.value, p.caret = tf.backspace(p.value, p.caret)
-	elseif key == "<Del>" then
+	elseif action == "delete" then
 		p.value, p.caret = tf.delete(p.value, p.caret)
-	elseif key == "<C-W>" then
+	elseif action == "delete_word" then
 		p.value, p.caret = tf.delete_word(p.value, p.caret)
-	elseif key == "<C-U>" then
+	elseif action == "clear" then
 		p.value, p.caret = "", 0
-	elseif key == "<Left>" or key == "<C-B>" then
+	elseif action == "caret_left" then
 		p.caret = math.max(0, p.caret - 1)
-	elseif key == "<Right>" or key == "<C-F>" then
+	elseif action == "caret_right" then
 		p.caret = math.min(tf.len(p.value), p.caret + 1)
-	elseif key == "<Home>" or key == "<C-A>" then
+	elseif action == "home" then
 		p.caret = 0
-	elseif key == "<End>" or key == "<C-E>" then
+	elseif action == "end" then
 		p.caret = tf.len(p.value)
 	elseif is_printable(ch, key) then
 		p.value, p.caret = tf.insert(p.value, p.caret, ch)
 	end
 end
 
---- One key while the action prefix (`<C-x>`) is showing.
-local function handle_prefix(ctx, key)
+--- One key while the action menu (`<C-x>`) is showing.
+local function handle_menu(ctx, map, key)
 	local S = ctx.state
 	S.prefix = nil
 	local item = ctx.current()
 	if not item then
 		return
 	end
-	if key == "r" then
+	local action = map[key]
+	if action == "rename" then
 		ctx.start_prompt("Rename: ", item.cand.rel, "rename")
-	elseif key == "d" then
+	elseif action == "delete" then
 		ctx.start_prompt("Delete " .. item.cand.rel .. "? [y/N] ", "", "delete")
-	elseif key == "a" then
+	elseif action == "create" then
 		ctx.start_prompt("Add: ", "", "create")
-	elseif key == "y" then
+	elseif action == "yank" then
 		ctx.yank(item)
 	end
 end
 
---- One normal-mode key. Returns true when the picker should quit.
-local function handle_normal(ctx, ch, key)
+--- One browse key. Returns true when the picker should quit.
+local function handle_browse(ctx, map, ch, key)
 	local S = ctx.state
-	if key == "<CR>" then
+	local action = map[key]
+	if action == "open" then
 		return not ctx.choose("edit")
-	elseif key == "<Esc>" or key == "<C-C>" then
+	elseif action == "close" then
 		ctx.close()
 		return true
-	elseif key == "<C-S>" then
+	elseif action == "split" then
 		return not ctx.choose("split")
-	elseif key == "<C-V>" then
+	elseif action == "vsplit" then
 		return not ctx.choose("vsplit")
-	elseif key == "<C-T>" then
+	elseif action == "tab" then
 		return not ctx.choose("tab")
-	elseif key == "<C-X>" then
+	elseif action == "menu" then
 		S.prefix = true
-	elseif key == "<LeftMouse>" then
-		ctx.mouse_select()
-	elseif key == "<2-LeftMouse>" then
-		if ctx.mouse_select() then
-			return not ctx.choose("edit")
-		end
-	elseif key == "<ScrollWheelUp>" then
-		ctx.move(-3)
-	elseif key == "<ScrollWheelDown>" then
-		ctx.move(3)
-	elseif key == "<C-N>" or key == "<Down>" then
-		ctx.move(1)
-	elseif key == "<C-P>" or key == "<Up>" then
-		ctx.move(-1)
-	elseif key == "<C-D>" then
-		ctx.move(ctx.page())
-	elseif key == "<C-U>" then
-		ctx.move(-ctx.page())
-	elseif key == "<C-O>" then
+	elseif action == "toggle_mode" then
 		S.mode = S.mode == "files" and "dirs" or "files"
 		S.query = ""
 		S.caret = 0
 		S.git = nil
 		ctx.reload()
-	elseif key == "<C-W>" then
+	elseif action == "select" then
+		ctx.mouse_select()
+	elseif action == "open_mouse" then
+		if ctx.mouse_select() then
+			return not ctx.choose("edit")
+		end
+	elseif action == "scroll_up" then
+		ctx.move(-3)
+	elseif action == "scroll_down" then
+		ctx.move(3)
+	elseif action == "down" then
+		ctx.move(1)
+	elseif action == "up" then
+		ctx.move(-1)
+	elseif action == "page_down" then
+		ctx.move(ctx.page())
+	elseif action == "page_up" then
+		ctx.move(-ctx.page())
+	elseif action == "delete_word" then
 		ctx.set_query(tf.delete_word(S.query, S.caret))
-	elseif key == "<BS>" then
+	elseif action == "backspace" then
 		ctx.set_query(tf.backspace(S.query, S.caret))
-	elseif key == "<Del>" then
+	elseif action == "delete" then
 		ctx.set_query(tf.delete(S.query, S.caret))
-	elseif key == "<Left>" or key == "<C-B>" then
+	elseif action == "caret_left" then
 		S.caret = math.max(0, S.caret - 1)
-	elseif key == "<Right>" or key == "<C-F>" then
+	elseif action == "caret_right" then
 		S.caret = math.min(tf.len(S.query), S.caret + 1)
-	elseif key == "<Home>" or key == "<C-A>" then
+	elseif action == "home" then
 		S.caret = 0
-	elseif key == "<End>" or key == "<C-E>" then
+	elseif action == "end" then
 		S.caret = tf.len(S.query)
 	elseif is_printable(ch, key) then
 		ctx.set_query(tf.insert(S.query, S.caret, ch))
@@ -137,6 +146,7 @@ end
 
 --- Run the blocking key loop until the picker closes.
 function M.run(ctx)
+	local maps = keymap.resolve(config.get().mappings)
 	ctx.render()
 	while ctx.is_active() do
 		local ch = vim.fn.getcharstr()
@@ -148,11 +158,11 @@ function M.run(ctx)
 
 		local quit
 		if ctx.state.prompt then
-			handle_prompt(ctx, ch, key)
+			handle_prompt(ctx, maps.prompt, ch, key)
 		elseif ctx.state.prefix then
-			handle_prefix(ctx, key)
+			handle_menu(ctx, maps.menu, key)
 		else
-			quit = handle_normal(ctx, ch, key)
+			quit = handle_browse(ctx, maps.browse, ch, key)
 		end
 		if quit then
 			return
