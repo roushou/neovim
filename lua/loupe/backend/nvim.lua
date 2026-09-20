@@ -42,6 +42,7 @@ M.list = {
 					label = rel .. ":" .. lnum .. ": " .. (d.message or ""),
 					lnum = lnum,
 					col = d.col or 0,
+					col_end = (d.end_lnum == d.lnum) and d.end_col or nil,
 					severity = d.severity,
 					icon = sev and sev[1],
 					icon_hl = sev and sev[2],

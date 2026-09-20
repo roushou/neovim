@@ -111,6 +111,7 @@ local function update_preview()
 			max_lines = cfg.preview.max_lines,
 			lnum = item.cand.lnum,
 			col = item.cand.col,
+			col_end = item.cand.col_end,
 		})
 	elseif preview.is_open() then
 		preview.clear()
@@ -324,10 +325,13 @@ local function quickfix()
 end
 
 --- Close the picker and return to the window it was opened from.
-function M.close()
+--- `opts.restore_cursor = false` keeps the origin window's current cursor,
+--- used when choosing has already positioned it (see `loupe.source.jump`).
+function M.close(opts)
 	if not active() then
 		return
 	end
+	opts = opts or {}
 	local origin = S.origin_win
 	local guicursor = S.guicursor
 	local cursor = S.origin_cursor
@@ -348,7 +352,7 @@ function M.close()
 	end
 	if origin and vim.api.nvim_win_is_valid(origin) then
 		vim.api.nvim_set_current_win(origin)
-		if cursor then
+		if cursor and opts.restore_cursor ~= false then
 			pcall(vim.api.nvim_win_set_cursor, origin, cursor)
 		end
 	end
@@ -386,13 +390,19 @@ local function choose(kind)
 	end
 
 	-- Sources that jump to a location (symbols, diagnostics) handle choosing
-	-- themselves; nil means "fall through to the default file open".
+	-- themselves; nil means "fall through".
 	local src = S.source
 	if src.choose then
 		local keep = src.choose(item.cand, kind, { session = S, root = S.root, close = M.close })
 		if keep ~= nil then
 			return keep
 		end
+	end
+
+	-- Any candidate carrying a line number (grep, symbols, diagnostics) jumps
+	-- to that location, reusing an already-loaded buffer.
+	if item.cand.lnum then
+		return require("loupe.source.jump").choose(item.cand, kind, { session = S, root = S.root, close = M.close })
 	end
 
 	local origin = S.origin_win

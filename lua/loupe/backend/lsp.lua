@@ -95,8 +95,9 @@ M.list = {
 		end
 		local path = vim.api.nvim_buf_get_name(buf)
 		local out, finish = collector(#clients, cb)
+		local params = { textDocument = vim.lsp.util.make_text_document_params(buf) }
 		for _, c in ipairs(clients) do
-			c:request("textDocument/documentSymbol", vim.lsp.util.make_text_document_params(buf), function(err, result)
+			c:request("textDocument/documentSymbol", params, function(err, result)
 				if not err and type(result) == "table" then
 					flatten(result, out, path, ctx.root, 0)
 				end

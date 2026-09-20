@@ -18,6 +18,11 @@ local M = {}
 
 local P = { win = nil, buf = nil, path = nil }
 
+local hl_ns = vim.api.nvim_create_namespace("loupe_preview_hl")
+
+vim.api.nvim_set_hl(0, "LoupePreviewLine", { link = "CursorLine", default = true })
+vim.api.nvim_set_hl(0, "LoupePreviewMatch", { link = "Search", default = true })
+
 --- Rows occupied by the tabline (showtabline=2, or 1 with multiple tabs).
 local function tabline_rows()
 	if vim.o.showtabline == 2 then
@@ -55,6 +60,37 @@ local function position(lnum, col)
 	vim.api.nvim_win_call(P.win, function()
 		vim.cmd("normal! zz")
 	end)
+end
+
+--- Highlight the occurrence line and, when known, the exact match range.
+local function highlight(lnum, col, col_end)
+	if not (P.buf and vim.api.nvim_buf_is_valid(P.buf)) then
+		return
+	end
+	vim.api.nvim_buf_clear_namespace(P.buf, hl_ns, 0, -1)
+	if not lnum then
+		return
+	end
+	local row = lnum - 1
+	if row < 0 or row >= vim.api.nvim_buf_line_count(P.buf) then
+		return
+	end
+	vim.api.nvim_buf_set_extmark(P.buf, hl_ns, row, 0, {
+		line_hl_group = "LoupePreviewLine",
+		priority = 50,
+	})
+	if col and col_end and col_end > col then
+		local line = vim.api.nvim_buf_get_lines(P.buf, row, row + 1, false)[1] or ""
+		local from = math.max(0, math.min(col, #line))
+		local to = math.max(from, math.min(col_end, #line))
+		if to > from then
+			vim.api.nvim_buf_set_extmark(P.buf, hl_ns, row, from, {
+				end_col = to,
+				hl_group = "LoupePreviewMatch",
+				priority = 200,
+			})
+		end
+	end
 end
 
 --- Whether the preview float is currently open.
@@ -144,6 +180,7 @@ function M.show(path, opts)
 	-- Same file already rendered: reposition without re-reading it.
 	if path == P.path then
 		position(lnum, col)
+		highlight(opts.lnum, opts.col, opts.col_end)
 		return
 	end
 	P.path = path
@@ -152,6 +189,7 @@ function M.show(path, opts)
 	if preview.is_text(path) == false then
 		set_lines({ "-binary file-" })
 		position(1, 0)
+		highlight(nil)
 		return
 	end
 
@@ -159,6 +197,7 @@ function M.show(path, opts)
 	if not lines then
 		set_lines({ "-cannot read file-" })
 		position(1, 0)
+		highlight(nil)
 		return
 	end
 	if truncated then
@@ -172,6 +211,17 @@ function M.show(path, opts)
 		preview.highlight(P.buf, vim.filetype.match({ filename = path }) or "")
 	end
 	position(lnum, col)
+	highlight(opts.lnum, opts.col, opts.col_end)
+end
+
+--- Current topline of the preview (nil when closed).
+function M.topline()
+	if not M.is_open() then
+		return nil
+	end
+	return vim.api.nvim_win_call(P.win, function()
+		return vim.fn.line("w0")
+	end)
 end
 
 --- Clear the preview (no selection).

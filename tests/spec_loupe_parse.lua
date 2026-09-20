@@ -58,21 +58,49 @@ h.test("status preserves paths with spaces", function()
 	h.eq(out[1].rel, "my file.lua")
 end)
 
-h.test("vimgrep parses path:line:col:text", function()
-	local out = parse.vimgrep("lua/a.lua:12:5:local M = {}\n", "/r")
+h.test("rgjson parses match events with submatch ranges", function()
+	local ev = vim.json.encode({
+		type = "match",
+		data = {
+			path = { text = "lua/a.lua" },
+			lines = { text = "local M = {}\n" },
+			line_number = 12,
+			submatches = { { start = 6, ["end"] = 7 } },
+		},
+	})
+	local out = parse.rgjson(ev, "/r")
 	h.eq(#out, 1)
 	h.eq(out[1], {
 		rel = "lua/a.lua",
 		abs = "/r/lua/a.lua",
 		label = "lua/a.lua:12: local M = {}",
 		lnum = 12,
-		col = 4,
+		col = 6,
+		col_end = 7,
 		dir = false,
 	})
 end)
 
-h.test("vimgrep tolerates empty output", function()
-	h.eq(parse.vimgrep("", "/r"), {})
+h.test("rgjson yields one candidate per submatch, ignoring other events", function()
+	local begin = vim.json.encode({ type = "begin", data = { path = { text = "a.lua" } } })
+	local match = vim.json.encode({
+		type = "match",
+		data = {
+			path = { text = "a.lua" },
+			lines = { text = "x x x\n" },
+			line_number = 1,
+			submatches = { { start = 0, ["end"] = 1 }, { start = 2, ["end"] = 3 } },
+		},
+	})
+	local out = parse.rgjson(begin .. "\n" .. match, "/r")
+	h.eq(#out, 2)
+	h.eq(out[2].col, 2)
+	h.eq(out[2].col_end, 3)
+end)
+
+h.test("rgjson tolerates empty and malformed output", function()
+	h.eq(parse.rgjson("", "/r"), {})
+	h.eq(parse.rgjson("not json\n", "/r"), {})
 end)
 
 h.test("gitgrep parses path:line:text with column 0", function()

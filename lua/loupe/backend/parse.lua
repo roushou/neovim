@@ -78,20 +78,34 @@ function M.status(stdout, root)
 	return out
 end
 
---- Parse `rg --vimgrep` output (`path:line:col:text`) into candidates.
-function M.vimgrep(stdout, root)
+--- Parse `rg --json` (NDJSON) match events into candidates. Each submatch
+--- becomes a candidate carrying the exact byte range (`col`..`col_end`) so the
+--- preview can highlight the occurrence. Handles text and base64 byte paths.
+function M.rgjson(stdout, root)
 	local out = {}
 	for _, line in ipairs(run.lines(stdout)) do
-		local rel, lnum, col, text = line:match("^(.-):(%d+):(%d+):(.*)$")
-		if rel then
-			out[#out + 1] = {
-				rel = rel,
-				abs = vim.fs.joinpath(root, rel),
-				label = rel .. ":" .. lnum .. ": " .. text,
-				lnum = tonumber(lnum),
-				col = tonumber(col) - 1,
-				dir = false,
-			}
+		local ok, ev = pcall(vim.json.decode, line)
+		if ok and type(ev) == "table" and ev.type == "match" then
+			local d = ev.data or {}
+			local path = d.path and (d.path.text or (d.path.bytes and vim.base64.decode(d.path.bytes)))
+			local text = d.lines and (d.lines.text or (d.lines.bytes and vim.base64.decode(d.lines.bytes)))
+			if path and text then
+				text = text:gsub("\r?\n$", "")
+				local lnum = d.line_number or 1
+				for _, sm in ipairs(d.submatches or {}) do
+					local from = sm.start or 0
+					local to = sm["end"] or from
+					out[#out + 1] = {
+						rel = path,
+						abs = vim.fs.joinpath(root, path),
+						label = path .. ":" .. lnum .. ": " .. text,
+						lnum = lnum,
+						col = from,
+						col_end = to,
+						dir = false,
+					}
+				end
+			end
 		end
 	end
 	return out
