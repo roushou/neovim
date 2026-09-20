@@ -39,6 +39,8 @@ M.defaults = {
 		recent = { "internal" },
 		grep = { "rg", "git" },
 		symbols = { "lsp" },
+		doc_symbols = { "lsp" },
+		diagnostics = { "nvim" },
 	},
 
 	--- Preview options.
@@ -131,6 +133,8 @@ M.defaults = {
 			["c"] = "changed",
 			["g"] = "grep",
 			["s"] = "symbols",
+			["t"] = "doc_symbols",
+			["e"] = "diagnostics",
 		},
 		prompt = {
 			["<CR>"] = "submit",

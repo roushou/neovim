@@ -8,7 +8,6 @@ require("mini.ai").setup({
 require("mini.comment").setup()
 require("mini.pairs").setup()
 require("mini.icons").setup()
-require("mini.pick").setup()
 require("mini.jump2d").setup()
 require("mini.bufremove").setup()
 require("mini.starter").setup()

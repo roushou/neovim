@@ -9,8 +9,8 @@ return {
 	name = "dirs",
 	label = "Directories",
 	icon = "",
-	list = function(root, cb)
-		backend.list(root, "dirs", function(cands)
+	list = function(ctx, cb)
+		backend.list(ctx, "dirs", function(cands)
 			cb(cands, true)
 		end)
 	end,

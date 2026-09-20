@@ -10,14 +10,14 @@ local parse = require("loupe.backend.parse")
 local M = { exe = "fd" }
 
 M.list = {
-	files = function(root, cb)
-		run.raw({ "fd", "--type", "f" }, root, function(stdout)
-			return parse.paths(stdout, root, false)
+	files = function(ctx, cb)
+		run.raw({ "fd", "--type", "f" }, ctx.root, function(stdout)
+			return parse.paths(stdout, ctx.root, false)
 		end, cb)
 	end,
-	dirs = function(root, cb)
-		run.raw({ "fd", "--type", "d" }, root, function(stdout)
-			return parse.paths(stdout, root, true)
+	dirs = function(ctx, cb)
+		run.raw({ "fd", "--type", "d" }, ctx.root, function(stdout)
+			return parse.paths(stdout, ctx.root, true)
 		end, cb)
 	end,
 }

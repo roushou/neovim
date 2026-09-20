@@ -1,12 +1,15 @@
---- Symbols source: workspace symbols (LSP `workspace/symbol`).
+--- Workspace symbols source: workspace/symbol across all capable clients.
 ---
---- Dynamic, like grep: each query change fires a debounced request at every
---- capable client attached to the buffer the picker was opened from.
+--- Dynamic, like grep: each query change fires a debounced request. Choosing
+--- jumps to the symbol (see `loupe.source.jump`).
+
+local jump = require("loupe.source.jump")
 
 return {
 	name = "symbols",
-	label = "Symbols",
+	label = "Workspace symbols",
 	icon = "",
 	backend = { "lsp" },
 	search = "symbols",
+	choose = jump.choose,
 }

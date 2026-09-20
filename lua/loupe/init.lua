@@ -2,7 +2,7 @@
 ---
 --- Public API:
 ---   require("loupe").setup(opts)
----   require("loupe").open()
+---   require("loupe").open({ source = "files" })
 ---   require("loupe").close()
 ---   require("loupe").toggle()
 ---
@@ -244,7 +244,7 @@ function reload()
 		return
 	end
 
-	source.load(src, root, function(cands)
+	source.load(src, { root = root, buf = session.origin_buf, name = src.name }, function(cands)
 		if S ~= session or S.root ~= root or S.source ~= src then
 			return
 		end
@@ -385,6 +385,16 @@ local function choose(kind)
 		return true
 	end
 
+	-- Sources that jump to a location (symbols, diagnostics) handle choosing
+	-- themselves; nil means "fall through to the default file open".
+	local src = S.source
+	if src.choose then
+		local keep = src.choose(item.cand, kind, { session = S, root = S.root, close = M.close })
+		if keep ~= nil then
+			return keep
+		end
+	end
+
 	local origin = S.origin_win
 	M.close()
 	if config.get().frecency and item.cand.abs then
@@ -423,14 +433,15 @@ local function mouse_select()
 	return true
 end
 
---- Open the picker.
-function M.open()
+--- Open the picker. `opts.source` picks the initial source by name.
+function M.open(opts)
 	if active() then
 		return
 	end
 	local cfg = config.get()
 	local origin = vim.api.nvim_get_current_win()
 	local root = cfg.root()
+	local wanted = opts and opts.source
 
 	S = {
 		active = true,
@@ -441,7 +452,7 @@ function M.open()
 		gen = 0,
 		root = root,
 		project_root = root,
-		source = source.get(cfg.default_source or "files") or source.get("files"),
+		source = (wanted and source.get(wanted)) or source.get(cfg.default_source or "files") or source.get("files"),
 		candidates = {},
 		query = "",
 		caret = 0,
@@ -517,11 +528,11 @@ function M.open()
 end
 
 --- Toggle the picker.
-function M.toggle()
+function M.toggle(opts)
 	if active() then
 		M.close()
 	else
-		M.open()
+		M.open(opts)
 	end
 end
 

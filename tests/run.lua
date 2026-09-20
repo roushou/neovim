@@ -11,6 +11,7 @@ for _, spec in ipairs({
 	"tests.spec_ui_preview",
 	"tests.spec_loupe_backend",
 	"tests.spec_loupe_parse",
+	"tests.spec_loupe_nvim",
 	"tests.spec_loupe_source",
 	"tests.spec_loupe_icons",
 	"tests.spec_loupe_keymap",

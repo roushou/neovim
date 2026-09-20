@@ -10,14 +10,14 @@ local parse = require("loupe.backend.parse")
 local M = { exe = "git" }
 
 M.list = {
-	files = function(root, cb)
-		run.raw({ "git", "ls-files" }, root, function(stdout)
-			return parse.paths(stdout, root, false)
+	files = function(ctx, cb)
+		run.raw({ "git", "ls-files" }, ctx.root, function(stdout)
+			return parse.paths(stdout, ctx.root, false)
 		end, cb)
 	end,
-	changed = function(root, cb)
-		run.raw({ "git", "status", "--porcelain=v1", "-z", "--untracked-files=all" }, root, function(stdout)
-			return parse.status(stdout, root)
+	changed = function(ctx, cb)
+		run.raw({ "git", "status", "--porcelain=v1", "-z", "--untracked-files=all" }, ctx.root, function(stdout)
+			return parse.status(stdout, ctx.root)
 		end, cb)
 	end,
 }

@@ -38,7 +38,7 @@ h.test("resolve prefers the first available backend", function()
 	h.eq(id, "fake")
 	h.ok(fn)
 	local got
-	fn("/r", function(cands)
+	fn({ root = "/r" }, function(cands)
 		got = cands
 	end)
 	h.eq(got[1].rel, "x")
@@ -66,7 +66,7 @@ h.test("resolve_list cascades on failure", function()
 	backend.registry.bad = mk("bad", false)
 	backend.registry.good = mk("good", true)
 	local got
-	backend.resolve_list("files", "/r", { "bad", "good" }, function(cands, ok)
+	backend.resolve_list("files", { root = "/r" }, { "bad", "good" }, function(cands, ok)
 		got = { cands, ok }
 	end)
 	h.eq(calls, { "bad", "good" })
@@ -77,7 +77,7 @@ end)
 
 h.test("resolve_list reports failure when exhausted", function()
 	local got
-	backend.resolve_list("files", "/r", { "nope" }, function(cands, ok)
+	backend.resolve_list("files", { root = "/r" }, { "nope" }, function(cands, ok)
 		got = { cands, ok }
 	end)
 	h.eq(got, { {}, false })

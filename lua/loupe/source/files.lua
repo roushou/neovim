@@ -9,8 +9,8 @@ return {
 	name = "files",
 	label = "Files",
 	icon = "",
-	list = function(root, cb)
-		backend.list(root, "files", function(cands)
+	list = function(ctx, cb)
+		backend.list(ctx, "files", function(cands)
 			cb(cands, true)
 		end)
 	end,

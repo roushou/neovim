@@ -2,7 +2,17 @@ local h = require("tests.harness")
 local source = require("loupe.source")
 
 h.test("built-in sources are registered", function()
-	for _, name in ipairs({ "files", "dirs", "buffers", "recent", "changed", "grep", "symbols" }) do
+	for _, name in ipairs({
+		"files",
+		"dirs",
+		"buffers",
+		"recent",
+		"changed",
+		"grep",
+		"symbols",
+		"doc_symbols",
+		"diagnostics",
+	}) do
 		local s = source.get(name)
 		h.ok(s, name .. " missing")
 		h.eq(s.name, name)
@@ -17,7 +27,7 @@ h.test("load dispatches a function source", function()
 		end,
 	}
 	local got
-	source.load(fake, "/r", function(cands, ok)
+	source.load(fake, { root = "/r" }, function(cands, ok)
 		got = { cands, ok }
 	end)
 	h.eq(got[1][1].rel, "x")
@@ -32,7 +42,7 @@ h.test("load resolves a backend op source", function()
 		end,
 	} }
 	local got
-	source.load({ name = "srcop", list = "srcop", backend = { "srcfake" } }, "/r", function(cands, ok)
+	source.load({ name = "srcop", list = "srcop", backend = { "srcfake" } }, { root = "/r" }, function(cands, ok)
 		got = { cands, ok }
 	end)
 	h.eq(got[1][1].rel, "op")
@@ -42,7 +52,7 @@ end)
 
 h.test("load reports failure when no backend is available", function()
 	local got
-	source.load({ name = "nope", list = "nope", backend = { "ghost" } }, "/r", function(cands, ok)
+	source.load({ name = "nope", list = "nope", backend = { "ghost" } }, { root = "/r" }, function(cands, ok)
 		got = { cands, ok }
 	end)
 	h.eq(got, { {}, false })

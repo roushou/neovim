@@ -45,12 +45,19 @@ function M.check()
 	end
 
 	local backend = require("loupe.backend")
-	for _, check in ipairs({ { "files", "list" }, { "dirs", "list" }, { "grep", "search" }, { "symbols", "search" } }) do
+	for _, check in ipairs({
+		{ "files", "list" },
+		{ "dirs", "list" },
+		{ "grep", "search" },
+		{ "symbols", "search" },
+		{ "doc_symbols", "list" },
+		{ "diagnostics", "list" },
+	}) do
 		local id = backend.resolve(check[1], nil, check[2])
 		if id then
 			vim.health.ok(check[1] .. " backend: " .. id)
-		elseif check[1] == "symbols" then
-			vim.health.info("symbols backend: no client supports workspace/symbol")
+		elseif check[1] == "symbols" or check[1] == "doc_symbols" then
+			vim.health.info(check[1] .. " backend: no LSP client attached")
 		else
 			vim.health.warn(check[1] .. " backend: none available")
 		end

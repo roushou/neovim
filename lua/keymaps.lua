@@ -17,7 +17,9 @@ map("n", "<C-n>", "<cmd>Neotree toggle<cr>", { desc = "Toggle file explorer" })
 map("n", "<C-p>", function()
 	require("loupe").toggle()
 end, { desc = "Find files" })
-map("n", "<leader>fw", "<cmd>Pick grep_live<cr>", { desc = "Live grep" })
+map("n", "<leader>fw", function()
+	require("loupe").open({ source = "grep" })
+end, { desc = "Live grep" })
 map("n", "H", function()
 	require("tabline").cycle(-1)
 end, { desc = "Previous buffer" })
@@ -29,10 +31,10 @@ map("n", "<leader>x", "<cmd>lua MiniBufremove.delete()<cr>", { desc = "Close buf
 -- LSP
 map("n", "<leader>li", "<cmd>LspInfo<cr>", { desc = "LSP info" })
 map("n", "<leader>ss", function()
-	require("lsp.features.pick").doc_symbols()
+	require("loupe").open({ source = "doc_symbols" })
 end, { desc = "LSP symbols" })
 map("n", "<leader>sw", function()
-	require("lsp.features.pick").workspace_symbols()
+	require("loupe").open({ source = "symbols" })
 end, { desc = "LSP workspace symbols" })
 
 -- Visual

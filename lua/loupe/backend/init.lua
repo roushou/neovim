@@ -47,7 +47,7 @@ end
 
 --- Try each preferred backend in order until one succeeds.
 --- `on_done(cands, ok)`; `ok = false` means every backend failed.
-function M.resolve_list(op, root, prefs, on_done)
+function M.resolve_list(op, ctx, prefs, on_done)
 	prefs = prefs or (config.get().backends and config.get().backends[op]) or {}
 	local function attempt(i)
 		local id = prefs[i]
@@ -60,7 +60,7 @@ function M.resolve_list(op, root, prefs, on_done)
 			attempt(i + 1)
 			return
 		end
-		b.list[op](root, function(cands, ok)
+		b.list[op](ctx, function(cands, ok)
 			if ok then
 				on_done(cands, true)
 			else
@@ -71,27 +71,27 @@ function M.resolve_list(op, root, prefs, on_done)
 	attempt(1)
 end
 
---- Enumerate `root` asynchronously; `on_done` receives the candidate list.
+--- Enumerate `ctx.root` asynchronously; `on_done` receives the candidate list.
 --- `mode` is "files" or "dirs"; when no directory enumerator is available (or
 --- it finds nothing) directories are derived from the file list.
-function M.list(root, mode, on_done)
+function M.list(ctx, mode, on_done)
 	if matcher.fff_module() then
 		on_done({})
 		return
 	end
 	if mode == "dirs" then
-		M.resolve_list("dirs", root, nil, function(cands, ok)
+		M.resolve_list("dirs", ctx, nil, function(cands, ok)
 			if ok and #cands > 0 then
 				on_done(cands)
 			else
-				M.resolve_list("files", root, nil, function(files)
-					on_done(parse.derive_dirs(files, root))
+				M.resolve_list("files", ctx, nil, function(files)
+					on_done(parse.derive_dirs(files, ctx.root))
 				end)
 			end
 		end)
 		return
 	end
-	M.resolve_list("files", root, nil, on_done)
+	M.resolve_list("files", ctx, nil, on_done)
 end
 
 --- Rank `cands` against `query` (delegates to `loupe.matcher`).

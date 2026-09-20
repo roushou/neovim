@@ -22,9 +22,9 @@ formatter, and a handful of quality-of-life helpers.
 
 ## Highlights
 
-- **Loupe** — bottom-docked fuzzy finder with a full-viewport live preview and
-  pluggable sources (files, directories, buffers, recent, changed, live grep,
-  workspace symbols).
+- **Loupe** — the single fuzzy finder: bottom-docked with a full-viewport live
+  preview and pluggable sources (files, directories, buffers, recent, changed,
+  live grep, workspace/document symbols, diagnostics).
 - **Declarative LSP** — one data-only file per server in `lsp/`, registered
   automatically; shared capabilities live in `lua/lsp/setup.lua`.
 - **Built-in plugin management** — declared with `vim.pack.add()` and pinned in
@@ -64,7 +64,7 @@ update them.
 | Key          | Action                           |
 | ------------ | -------------------------------- |
 | `<C-p>`      | Loupe — fuzzy finder (see below) |
-| `<leader>fw` | Live grep (`mini.pick`)          |
+| `<leader>fw` | Live grep (Loupe)          |
 | `<C-n>`      | Toggle file explorer (neo-tree)  |
 
 ### Buffers & windows
@@ -81,8 +81,8 @@ update them.
 | Key                         | Action                           |
 | --------------------------- | -------------------------------- |
 | `<leader>li`                | LSP info                         |
-| `<leader>ss`                | Document symbols                 |
-| `<leader>sw`                | Workspace symbols                |
+| `<leader>ss`                | Document symbols (Loupe)         |
+| `<leader>sw`                | Workspace symbols (Loupe)        |
 | `gd`                        | LSP definitions (Trouble)        |
 | `<leader>tt`                | Toggle Trouble                   |
 | `<leader>td` / `<leader>tw` | Document / workspace diagnostics |
@@ -111,29 +111,34 @@ update them.
 ## Loupe
 
 Loupe (`<C-p>`) is a bottom-docked fuzzy finder with a full-viewport live
-preview. It is **source-based**: the source menu changes _what_ is being
-searched, while matching, previewing, and actions stay the same. Browsing never
-opens a file buffer — files are read into a scratch buffer, and only the choose
-actions create real buffers.
+preview, and the configuration's only picker — it handles files, content search,
+symbols, and diagnostics. It is **source-based**: the source menu changes _what_
+is being searched, while matching, previewing, and actions stay the same.
+Browsing never opens a file buffer — files are read into a scratch buffer, and
+only the choose actions create real buffers.
 
-Public API: `require("loupe").open()`, `.close()`, `.toggle()`, `.setup(opts)`.
+Public API: `require("loupe").open({ source = "files" })`, `.close()`,
+`.toggle()`, `.setup(opts)`.
 
 ### Sources
 
 Open the source menu with `<C-o>`.
 
-| Key | Source      | Backend             | Notes                                          |
-| --- | ----------- | ------------------- | ---------------------------------------------- |
-| `f` | Files       | `fd` → `rg` → `git` | Project files, gitignore-aware                 |
-| `d` | Directories | `fd`                | `<CR>` descends into the directory             |
-| `b` | Buffers     | builtin             | Reuses the loaded buffer, unsaved edits intact |
-| `r` | Recent      | frecency store      | Most-frequently / recently opened              |
-| `c` | Changed     | `git status`        | Staged, unstaged, and untracked                |
-| `g` | Grep        | `rg` → `git grep`   | Live content search                            |
-| `s` | Symbols     | LSP                 | Workspace symbols                              |
+| Key | Source            | Backend             | Notes                                          |
+| --- | ----------------- | ------------------- | ---------------------------------------------- |
+| `f` | Files             | `fd` → `rg` → `git` | Project files, gitignore-aware                 |
+| `d` | Directories       | `fd`                | `<CR>` descends into the directory             |
+| `b` | Buffers           | builtin             | Reuses the loaded buffer, unsaved edits intact |
+| `r` | Recent            | frecency store      | Most-frequently / recently opened              |
+| `c` | Changed           | `git status`        | Staged, unstaged, and untracked                |
+| `g` | Grep              | `rg` → `git grep`   | Live content search                            |
+| `s` | Workspace symbols | LSP                 | `workspace/symbol`                             |
+| `t` | Document symbols  | LSP                 | Symbols in the current buffer                  |
+| `e` | Diagnostics       | builtin             | Across all open documents                      |
 
 `grep` and `symbols` are **live**: each keystroke re-queries the backend
-(debounced), and the preview jumps to the match.
+(debounced), and the preview jumps to the match. Choosing a symbol or diagnostic
+jumps to its location in the buffer.
 
 ### Browsing
 
@@ -234,7 +239,7 @@ file to keep it loaded but inactive.
     ├── lsp/                 loader, shared defaults, keymaps, features
     ├── loupe/               the fuzzy finder
     │   ├── backend/         enumeration/search backends (fd, rg, git, nvim, lsp)
-    │   └── source/          picker modes (files, dirs, buffers, recent, changed, grep, symbols)
+    │   └── source/          picker modes (files, dirs, buffers, recent, changed, grep, symbols, doc symbols, diagnostics)
     ├── ui/                  theme, float, highlights, status, buffer/window helpers, preview
     └── util/                process wrapper, text field, debounce
 ```

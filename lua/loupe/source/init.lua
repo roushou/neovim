@@ -21,10 +21,11 @@ function M.get(name)
 	return M.registry[name]
 end
 
---- Load candidates for `source` under `root`. Calls `cb(cands, ok, backend_id)`.
-function M.load(source, root, cb)
+--- Load candidates for `source`. `ctx` is `{ root, buf, name }`.
+--- Calls `cb(cands, ok, backend_id)`.
+function M.load(source, ctx, cb)
 	if type(source.list) == "function" then
-		source.list(root, cb)
+		source.list(ctx, cb)
 		return
 	end
 	local op = source.list or source.name
@@ -33,7 +34,7 @@ function M.load(source, root, cb)
 		cb({}, false, id)
 		return
 	end
-	fn(root, function(cands, ok)
+	fn(ctx, function(cands, ok)
 		cb(cands, ok, id)
 	end)
 end
@@ -63,5 +64,7 @@ M.register(require("loupe.source.recent"))
 M.register(require("loupe.source.changed"))
 M.register(require("loupe.source.grep"))
 M.register(require("loupe.source.symbols"))
+M.register(require("loupe.source.doc_symbols"))
+M.register(require("loupe.source.diagnostics"))
 
 return M

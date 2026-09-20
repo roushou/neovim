@@ -7,8 +7,8 @@ local frecency = require("loupe.frecency")
 local M = {} -- no exe: always available
 
 M.list = {
-	recent = function(root, cb)
-		cb(frecency.recent(root), true)
+	recent = function(ctx, cb)
+		cb(frecency.recent(ctx.root), true)
 	end,
 }
 
