@@ -36,12 +36,13 @@ function M.build(raw)
 end
 
 --- Resolve every context from `config.get().mappings`.
---- Returns `{ browse, menu, prompt }` of canonical lookup maps.
+--- Returns `{ browse, menu, sources, prompt }` of canonical lookup maps.
 function M.resolve(mappings)
 	mappings = mappings or {}
 	return {
 		browse = M.build(mappings.browse),
 		menu = M.build(mappings.menu),
+		sources = M.build(mappings.sources),
 		prompt = M.build(mappings.prompt),
 	}
 end

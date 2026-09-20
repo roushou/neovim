@@ -37,3 +37,23 @@ h.test("derive_dirs extracts parents, ignoring root files", function()
 	h.eq(out[1], { rel = "src", abs = "/r/src", dir = true })
 	h.eq(out[2], { rel = "src/deep", abs = "/r/src/deep", dir = true })
 end)
+
+h.test("relpath strips the root prefix, falls back to basename", function()
+	h.eq(parse.relpath("/r", "/r/src/a.lua"), "src/a.lua")
+	h.eq(parse.relpath("/r", "/elsewhere/a.lua"), "a.lua")
+end)
+
+h.test("status parses porcelain -z including renames", function()
+	-- " M a.lua", "?? b.lua", "R  c.lua" + original "old.lua"
+	local s = " M a.lua\0?? b.lua\0R  c.lua\0old.lua\0"
+	local out = parse.status(s, "/r")
+	h.eq(#out, 3)
+	h.eq(out[1], { rel = "a.lua", abs = "/r/a.lua", label = "a.lua", dir = false })
+	h.eq(out[2].rel, "b.lua")
+	h.eq(out[3].rel, "c.lua")
+end)
+
+h.test("status preserves paths with spaces", function()
+	local out = parse.status("?? my file.lua\0", "/r")
+	h.eq(out[1].rel, "my file.lua")
+end)

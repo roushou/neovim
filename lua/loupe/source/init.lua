@@ -1,0 +1,47 @@
+--- Source registry.
+---
+--- A source is a named mode of the picker (`files`, `dirs`, `buffers`,
+--- `recent`, `changed`, later `grep` / `symbols`). It knows how to produce
+--- candidates, either through a backend `list` operation (string `list`) or a
+--- self-contained loader (`list` function). Matching, drawing, previewing and
+--- opening stay generic; only the candidate list is source-specific.
+
+local backend = require("loupe.backend")
+
+local M = { registry = {} }
+
+--- Register a source definition.
+function M.register(src)
+	M.registry[src.name] = src
+	return src
+end
+
+--- Look up a source by name.
+function M.get(name)
+	return M.registry[name]
+end
+
+--- Load candidates for `source` under `root`. Calls `cb(cands, ok, backend_id)`.
+function M.load(source, root, cb)
+	if type(source.list) == "function" then
+		source.list(root, cb)
+		return
+	end
+	local op = source.list or source.name
+	local id, fn = backend.resolve(op, source.backend)
+	if not fn then
+		cb({}, false, id)
+		return
+	end
+	fn(root, function(cands, ok)
+		cb(cands, ok, id)
+	end)
+end
+
+M.register(require("loupe.source.files"))
+M.register(require("loupe.source.dirs"))
+M.register(require("loupe.source.buffers"))
+M.register(require("loupe.source.recent"))
+M.register(require("loupe.source.changed"))
+
+return M

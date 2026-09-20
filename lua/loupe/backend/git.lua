@@ -15,6 +15,11 @@ M.list = {
 			return parse.paths(stdout, root, false)
 		end, cb)
 	end,
+	changed = function(root, cb)
+		run.raw({ "git", "status", "--porcelain=v1", "-z", "--untracked-files=all" }, root, function(stdout)
+			return parse.status(stdout, root)
+		end, cb)
+	end,
 }
 
 return M

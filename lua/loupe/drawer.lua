@@ -54,7 +54,19 @@ function M.open(height)
 	return { win = winid, buf = bufnr }
 end
 
---- Build the header line (prompt, query, caret, action hint) plus the prefix
+--- Sorted `[key]action` hints for a mapping context.
+local function menu_hints(cfg, context)
+	local map = (cfg.mappings and cfg.mappings[context]) or {}
+	local keys = vim.tbl_keys(map)
+	table.sort(keys)
+	local parts = {}
+	for _, k in ipairs(keys) do
+		parts[#parts + 1] = "[" .. k .. "]" .. tostring(map[k])
+	end
+	return "   " .. table.concat(parts, "  ")
+end
+
+--- Build the header line (prompt, query, caret, submenu hint) plus the prefix
 --- highlight width and the caret's start column.
 local function header(session, cfg)
 	local caret = cfg.prompt_caret or "▏"
@@ -70,8 +82,10 @@ local function header(session, cfg)
 	local text = cfg.prompt .. vim.fn.strcharpart(query, 0, c)
 	local caret_start = #text
 	text = text .. caret .. vim.fn.strcharpart(query, c)
-	if session.prefix then
-		text = text .. "   [r]ename  [d]elete  [a]dd  [y]ank"
+	if session.menu == "actions" then
+		text = text .. menu_hints(cfg, "menu")
+	elseif session.menu == "sources" then
+		text = text .. menu_hints(cfg, "sources")
 	end
 	return text, #cfg.prompt, caret_start
 end
@@ -95,7 +109,10 @@ local function build(session, cfg)
 				prefix = icon .. " "
 			end
 
-			local label = cand.rel .. (cand.dir and "/" or "")
+			local label = cand.label or cand.rel
+			if cand.dir and not label:match("/$") then
+				label = label .. "/"
+			end
 			local line = prefix .. label
 			local git_start, git_len, git_hl
 
@@ -158,8 +175,8 @@ function M.render(session, cfg)
 
 	local win = session.drawer_win
 	if win and vim.api.nvim_win_is_valid(win) then
-		local mode = session.mode == "dirs" and "dirs" or "files"
-		local title = " Loupe · " .. mode .. " · " .. #session.matches .. " "
+		local name = (session.source and session.source.label) or ""
+		local title = " Loupe · " .. name .. " · " .. #session.matches .. " "
 		local pad = math.max(0, vim.api.nvim_win_get_width(win) - vim.fn.strchars(title) - 1)
 		vim.wo[win].winbar = "─" .. title .. string.rep("─", pad)
 	end

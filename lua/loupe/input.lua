@@ -10,7 +10,7 @@
 ---
 --- `ctx` fields: `state` (session table), `is_active`, `render`, `close`,
 --- `choose`, `reload`, `refresh`, `move`, `page`, `current`, `set_query`,
---- `start_prompt`, `run_action`, `mouse_select`, `yank`.
+--- `start_prompt`, `set_source`, `run_action`, `mouse_select`, `yank`.
 
 local tf = require("util.textfield")
 local config = require("loupe.config")
@@ -66,7 +66,7 @@ end
 --- One key while the action menu (`<C-x>`) is showing.
 local function handle_menu(ctx, map, key)
 	local S = ctx.state
-	S.prefix = nil
+	S.menu = nil
 	local item = ctx.current()
 	if not item then
 		return
@@ -80,6 +80,15 @@ local function handle_menu(ctx, map, key)
 		ctx.start_prompt("Add: ", "", "create")
 	elseif action == "yank" then
 		ctx.yank(item)
+	end
+end
+
+--- One key while the source menu (`<C-o>`) is showing.
+local function handle_sources(ctx, map, key)
+	ctx.state.menu = nil
+	local name = map[key]
+	if name then
+		ctx.set_source(name)
 	end
 end
 
@@ -99,13 +108,9 @@ local function handle_browse(ctx, map, ch, key)
 	elseif action == "tab" then
 		return not ctx.choose("tab")
 	elseif action == "menu" then
-		S.prefix = true
-	elseif action == "toggle_mode" then
-		S.mode = S.mode == "files" and "dirs" or "files"
-		S.query = ""
-		S.caret = 0
-		S.git = nil
-		ctx.reload()
+		S.menu = "actions"
+	elseif action == "sources" then
+		S.menu = "sources"
 	elseif action == "select" then
 		ctx.mouse_select()
 	elseif action == "open_mouse" then
@@ -159,8 +164,10 @@ function M.run(ctx)
 		local quit
 		if ctx.state.prompt then
 			handle_prompt(ctx, maps.prompt, ch, key)
-		elseif ctx.state.prefix then
+		elseif ctx.state.menu == "actions" then
 			handle_menu(ctx, maps.menu, key)
+		elseif ctx.state.menu == "sources" then
+			handle_sources(ctx, maps.sources, key)
 		else
 			quit = handle_browse(ctx, maps.browse, ch, key)
 		end

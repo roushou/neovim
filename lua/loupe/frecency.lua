@@ -77,4 +77,28 @@ function M.sort(cands)
 	return cands
 end
 
+--- Candidates for files under `root`, most recent/frequent first.
+--- `limit` caps the result (all when nil).
+function M.recent(root, limit)
+	local prefix = root .. "/"
+	local out = {}
+	for abs in pairs(load()) do
+		if abs:sub(1, #prefix) == prefix then
+			local rel = abs:sub(#prefix + 1)
+			out[#out + 1] = { rel = rel, abs = abs, label = rel, dir = false }
+		end
+	end
+	table.sort(out, function(a, b)
+		local sa, sb = M.score(a.abs), M.score(b.abs)
+		if sa ~= sb then
+			return sa > sb
+		end
+		return a.rel < b.rel
+	end)
+	if limit and #out > limit then
+		out = vim.list_slice(out, 1, limit)
+	end
+	return out
+end
+
 return M

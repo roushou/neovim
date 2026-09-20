@@ -12,6 +12,7 @@
 
 local config = require("loupe.config")
 local backend = require("loupe.backend")
+local source = require("loupe.source")
 local drawer = require("loupe.drawer")
 local preview = require("loupe.preview")
 local frecency = require("loupe.frecency")
@@ -43,7 +44,7 @@ local function page()
 end
 
 local function refresh()
-	S.matches = backend.match(S.query, S.candidates, config.get().max_results, { root = S.root, mode = S.mode })
+	S.matches = backend.match(S.query, S.candidates, config.get().max_results, { root = S.root, mode = S.source.name })
 	if #S.matches == 0 then
 		S.index = 0
 	elseif S.index > #S.matches then
@@ -108,6 +109,19 @@ local function start_prompt(label, value, name)
 	S.prompt = { label = label, value = value, action = name, caret = tf.len(value) }
 end
 
+--- Switch the active source and reload its candidates.
+local function set_source(name)
+	local src = source.get(name)
+	if not src or src == S.source then
+		return
+	end
+	S.source = src
+	S.query = ""
+	S.caret = 0
+	S.git = nil
+	reload()
+end
+
 --- Run a committed action by name and refresh the view.
 local function run_action(name, value)
 	local item = current()
@@ -137,7 +151,7 @@ local function run_action(name, value)
 	render()
 end
 
---- (Re)enumerate the current root/mode asynchronously and refresh the view.
+--- (Re)enumerate the current root/source asynchronously and refresh the view.
 local function reload()
 	if not active() then
 		return
@@ -149,12 +163,12 @@ local function reload()
 	drawer.render(S, cfg)
 	vim.cmd("redraw")
 
-	local root, mode = S.root, S.mode
-	backend.list(root, mode, function(cands)
-		if not active() or S.root ~= root or S.mode ~= mode then
+	local root, src = S.root, S.source
+	source.load(src, root, function(cands)
+		if not active() or S.root ~= root or S.source ~= src then
 			return
 		end
-		if cfg.frecency and mode == "files" then
+		if cfg.frecency and src.name == "files" then
 			cands = frecency.sort(cands)
 		end
 		S.candidates = cands
@@ -163,7 +177,7 @@ local function reload()
 		render()
 	end)
 
-	if cfg.git and mode == "files" then
+	if cfg.git and src.name == "files" then
 		git.status(root, function(map)
 			if active() and S.root == root then
 				S.git = map
@@ -197,6 +211,19 @@ function M.close()
 	end
 end
 
+--- Open an already-loaded buffer in the target window, reusing it as-is.
+local function open_buf(bufnr, kind)
+	if kind == "split" then
+		vim.cmd("split")
+	elseif kind == "vsplit" then
+		vim.cmd("vsplit")
+	elseif kind == "tab" then
+		vim.cmd("tabnew")
+	end
+	vim.api.nvim_win_set_buf(0, bufnr)
+	vim.bo[bufnr].buflisted = true
+end
+
 --- Commit the current selection and open it for real (or descend into a dir).
 --- Returns true when the picker should stay open (directory navigation).
 local function choose(kind)
@@ -207,7 +234,7 @@ local function choose(kind)
 
 	if item.cand.dir then
 		S.root = item.cand.abs
-		S.mode = "files"
+		S.source = source.get("files")
 		S.query = ""
 		S.caret = 0
 		S.git = nil
@@ -217,11 +244,15 @@ local function choose(kind)
 
 	local origin = S.origin_win
 	M.close()
-	if config.get().frecency then
+	if config.get().frecency and item.cand.abs then
 		frecency.record(item.cand.abs)
 	end
 	local win = origin and vim.api.nvim_win_is_valid(origin) and origin or vim.api.nvim_get_current_win()
 	vim.api.nvim_set_current_win(win)
+	if item.cand.bufnr and vim.api.nvim_buf_is_valid(item.cand.bufnr) then
+		open_buf(item.cand.bufnr, kind)
+		return false
+	end
 	local path = vim.fn.fnameescape(item.cand.abs)
 	if kind == "split" then
 		vim.cmd("split " .. path)
@@ -262,7 +293,7 @@ function M.open()
 		loaded = false,
 		origin_win = origin,
 		root = cfg.root(),
-		mode = cfg.mode or "files",
+		source = source.get(cfg.default_source or "files") or source.get("files"),
 		candidates = {},
 		query = "",
 		caret = 0,
@@ -270,7 +301,7 @@ function M.open()
 		index = 0,
 		git = nil,
 		prompt = nil,
-		prefix = false,
+		menu = nil,
 		-- captured before the drawer exists, so window-local options are the
 		-- user's normal values (drawer turns number/signcolumn off)
 		preview_opts = {
@@ -315,6 +346,7 @@ function M.open()
 		current = current,
 		set_query = set_query,
 		start_prompt = start_prompt,
+		set_source = set_source,
 		run_action = run_action,
 		mouse_select = mouse_select,
 		yank = function(item)

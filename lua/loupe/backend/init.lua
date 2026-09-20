@@ -15,6 +15,8 @@ local M = { registry = {} }
 M.registry.fd = require("loupe.backend.fd")
 M.registry.rg = require("loupe.backend.rg")
 M.registry.git = require("loupe.backend.git")
+M.registry.nvim = require("loupe.backend.nvim")
+M.registry.internal = require("loupe.backend.internal")
 
 --- A backend is available when it declares no exe or its exe is on PATH.
 local function available(b)

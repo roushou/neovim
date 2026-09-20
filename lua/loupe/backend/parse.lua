@@ -43,4 +43,39 @@ function M.derive_dirs(files, root)
 	return out
 end
 
+--- Path of `abs` relative to `root` (basename when outside the root).
+function M.relpath(root, abs)
+	if abs:sub(1, #root + 1) == root .. "/" then
+		return abs:sub(#root + 2)
+	end
+	return vim.fn.fnamemodify(abs, ":t")
+end
+
+--- Parse `git status --porcelain -z` into changed-file candidates. NUL framing
+--- preserves paths with spaces; rename/copy records carry the original path
+--- as a second token, which is skipped.
+function M.status(stdout, root)
+	local toks, out = {}, {}
+	local s, i = stdout or "", 1
+	while true do
+		local j = s:find("\0", i, true)
+		if not j then
+			break
+		end
+		toks[#toks + 1] = s:sub(i, j - 1)
+		i = j + 1
+	end
+	local n = 1
+	while n <= #toks do
+		local entry = toks[n]
+		local xy = entry:sub(1, 2)
+		local rel = entry:sub(4)
+		if rel ~= "" then
+			out[#out + 1] = { rel = rel, abs = root .. "/" .. rel, label = rel, dir = false }
+		end
+		n = n + (xy:find("[RC]") and 2 or 1)
+	end
+	return out
+end
+
 return M

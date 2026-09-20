@@ -11,8 +11,8 @@ M.defaults = {
 	--- Cap on ranked results rendered (and previewed).
 	max_results = 200,
 
-	--- Initial listing mode: "files" or "dirs".
-	mode = "files",
+	--- Source shown when the picker opens (see `lua/loupe/source/`).
+	default_source = "files",
 
 	--- Project root resolver. Prefers a VCS root, then common project
 	--- markers, then the current working directory.
@@ -34,6 +34,9 @@ M.defaults = {
 	backends = {
 		files = { "fd", "rg", "git" },
 		dirs = { "fd" },
+		changed = { "git" },
+		buffers = { "nvim" },
+		recent = { "internal" },
 	},
 
 	--- Preview options.
@@ -60,9 +63,10 @@ M.defaults = {
 
 	--- Key bindings, grouped by context. Each map is `{ [lhs] = action }`.
 	---
-	---   browse: the result list (movement, opening, editing the query)
-	---   menu:   the submenu opened by the browse `menu` action (<C-x>)
-	---   prompt: inline text prompts (rename / delete / create)
+	---   browse:  the result list (movement, opening, editing the query)
+	---   menu:    the submenu opened by the browse `menu` action (<C-x>)
+	---   sources: the submenu opened by the browse `sources` action (<C-o>)
+	---   prompt:  inline text prompts (rename / delete / create)
 	---
 	--- lhs may be written in any notation Neovim understands (`<C-s>` and
 	--- `<C-S>` are equivalent). Set a value to `false` to unbind a default
@@ -76,7 +80,7 @@ M.defaults = {
 			["<Esc>"] = "close",
 			["<C-C>"] = "close",
 			["<C-X>"] = "menu",
-			["<C-O>"] = "toggle_mode",
+			["<C-O>"] = "sources",
 			["<C-P>"] = "up",
 			["<Up>"] = "up",
 			["<C-N>"] = "down",
@@ -104,6 +108,13 @@ M.defaults = {
 			["d"] = "delete",
 			["a"] = "create",
 			["y"] = "yank",
+		},
+		sources = {
+			["f"] = "files",
+			["d"] = "dirs",
+			["b"] = "buffers",
+			["r"] = "recent",
+			["c"] = "changed",
 		},
 		prompt = {
 			["<CR>"] = "submit",
