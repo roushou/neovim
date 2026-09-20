@@ -71,4 +71,14 @@ function M.get(cand)
 	return FILE.glyph, FILE.hl
 end
 
+--- Resolve a candidate's glyph, preferring an explicit `cand.icon`.
+--- Symbol and diagnostic sources set their own kind/severity icon; everything
+--- else falls back to filetype detection.
+function M.for_candidate(cand)
+	if cand.icon then
+		return cand.icon, cand.icon_hl
+	end
+	return M.get(cand)
+end
+
 return M

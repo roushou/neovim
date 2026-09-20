@@ -44,17 +44,33 @@ local function collector(n, cb)
 	end
 end
 
+--- Symbol-kind glyph via `mini.icons` (optional dependency, so pcall).
+local function kind_icon(kind)
+	local name = kind and vim.lsp.protocol.SymbolKind[kind]
+	if not name then
+		return nil, nil
+	end
+	local ok, mini = pcall(require, "mini.icons")
+	if ok and type(mini.get) == "function" then
+		return mini.get("lsp", name)
+	end
+	return nil, nil
+end
+
 --- Flatten SymbolInformation / hierarchical DocumentSymbol results.
 local function flatten(symbols, out, path, root, depth)
 	for _, sym in ipairs(symbols) do
 		local range = sym.range or (sym.location and sym.location.range)
 		if sym.name and range then
+			local icon, icon_hl = kind_icon(sym.kind)
 			out[#out + 1] = {
 				rel = parse.relpath(root, path),
 				abs = path,
 				label = string.rep("  ", depth) .. sym.name,
 				lnum = (range.start and range.start.line + 1) or 1,
 				col = 0,
+				icon = icon,
+				icon_hl = icon_hl,
 				dir = false,
 			}
 		end
@@ -118,12 +134,15 @@ M.search = {
 						if sym.containerName and sym.containerName ~= "" then
 							name = name .. " (" .. sym.containerName .. ")"
 						end
+						local icon, icon_hl = kind_icon(sym.kind)
 						out[#out + 1] = {
 							rel = rel,
 							abs = path,
 							label = name .. "  " .. rel,
 							lnum = (loc.range.start and loc.range.start.line + 1) or 1,
 							col = 0,
+							icon = icon,
+							icon_hl = icon_hl,
 							dir = false,
 						}
 					end

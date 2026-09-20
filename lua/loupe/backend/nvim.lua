@@ -7,6 +7,14 @@ local parse = require("loupe.backend.parse")
 
 local M = {} -- no exe: always available
 
+--- Severity glyph + highlight, keyed by |vim.diagnostic.severity|.
+local SEVERITY = {
+	[vim.diagnostic.severity.ERROR] = { "\u{f057}", "DiagnosticError" },
+	[vim.diagnostic.severity.WARN] = { "\u{f071}", "DiagnosticWarn" },
+	[vim.diagnostic.severity.INFO] = { "\u{f05a}", "DiagnosticInfo" },
+	[vim.diagnostic.severity.HINT] = { "\u{f0eb}", "DiagnosticHint" },
+}
+
 M.list = {
 	buffers = function(ctx, cb)
 		local out = {}
@@ -27,6 +35,7 @@ M.list = {
 			if name ~= "" then
 				local rel = parse.relpath(ctx.root, name)
 				local lnum = d.lnum + 1
+				local sev = SEVERITY[d.severity]
 				out[#out + 1] = {
 					rel = rel,
 					abs = name,
@@ -34,6 +43,8 @@ M.list = {
 					lnum = lnum,
 					col = d.col or 0,
 					severity = d.severity,
+					icon = sev and sev[1],
+					icon_hl = sev and sev[2],
 					dir = false,
 				}
 			end

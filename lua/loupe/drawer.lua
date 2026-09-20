@@ -111,7 +111,7 @@ local function build(session, cfg)
 			end
 			local icon, icon_hl = "", nil
 			if cfg.icons then
-				icon, icon_hl = icons.get(cand)
+				icon, icon_hl = icons.for_candidate(cand)
 			end
 			local prefix = mark .. (icon ~= "" and (icon .. " ") or "")
 
