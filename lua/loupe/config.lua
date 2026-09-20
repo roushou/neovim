@@ -28,6 +28,14 @@ M.defaults = {
 	--- Backend id. Only "ripgrep" (built-in CLI + matchfuzzypos) exists so far.
 	backend = "ripgrep",
 
+	--- Enumeration backends per capability, in preference order. The first
+	--- available tool wins; a failing run cascades to the next. `fd` is
+	--- preferred for files/dirs, with `rg`/`git` as fallbacks.
+	backends = {
+		files = { "fd", "rg", "git" },
+		dirs = { "fd" },
+	},
+
 	--- Preview options.
 	preview = {
 		enabled = true,

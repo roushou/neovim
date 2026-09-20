@@ -16,7 +16,7 @@ My personal Neovim configuration — built-in plugin management, declarative LSP
 
 - Neovim **≥ 0.12** (`vim.pack`, `vim.lsp.config`, `lsp/` config dir)
 - A [Nerd Font](https://www.nerdfonts.com/) for file icons and glyphs
-- External tools: `git`, `lazygit`, `rg` (ripgrep)
+- External tools: `git`, `lazygit`, `fd`, `rg` (ripgrep)
 
 LSP servers are **not** bundled — install the ones you need (e.g. `lua-language-server`, `gopls`, `basedpyright-langserver`) and make sure they're on your `$PATH`.
 
@@ -92,7 +92,7 @@ Bindings are data, not code. Override any of them (in `browse`, `menu`, or `prom
 
 ## Health & tests
 
-`:checkhealth loupe` reports external tools (`rg`/`fd`/`git`), the configured backend, and the resolved project root.
+`:checkhealth loupe` reports external tools (`fd`/`rg`/`git`), the resolved enumeration backends and matcher, and the resolved project root.
 
 Pure unit tests (no plugins) run headlessly and in CI:
 
