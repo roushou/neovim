@@ -167,21 +167,23 @@ function M.cycle(dir)
 	vim.cmd.buffer(buffers[next_idx])
 end
 
--- 'tabline' expression + click handler. The mouse option is required for
--- click labels to receive events at all.
-if vim.o.mouse == "" then
-	vim.o.mouse = "a"
-end
-vim.o.showtabline = 2
-vim.o.tabline = surface.expr("TablineRender", M.render)
-surface.clickable("TablineClick", M.click)
+--- Install the tabline expression, click handler and redraw autocmd.
+function M.setup()
+	-- The mouse option is required for click labels to receive events at all.
+	if vim.o.mouse == "" then
+		vim.o.mouse = "a"
+	end
+	vim.o.showtabline = 2
+	vim.o.tabline = surface.expr("TablineRender", M.render)
+	surface.clickable("TablineClick", M.click)
 
--- redraw when the buffer list / names / modified state can change
-vim.api.nvim_create_autocmd({ "BufAdd", "BufDelete", "BufEnter", "BufWipeout", "BufFilePost" }, {
-	group = util.augroup("tabline_redraw"),
-	callback = function()
-		vim.cmd("redrawtabline")
-	end,
-})
+	-- redraw when the buffer list / names / modified state can change
+	vim.api.nvim_create_autocmd({ "BufAdd", "BufDelete", "BufEnter", "BufWipeout", "BufFilePost" }, {
+		group = util.augroup("tabline_redraw"),
+		callback = function()
+			vim.cmd("redrawtabline")
+		end,
+	})
+end
 
 return M

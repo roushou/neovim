@@ -312,15 +312,17 @@ local function map_triggers(buf)
 	end)
 end
 
--- triggers are buffer-local; install on every buffer as it's entered
-vim.api.nvim_create_autocmd("BufEnter", {
-	desc = "Install keyd triggers",
-	callback = function()
-		map_triggers(vim.api.nvim_get_current_buf())
-	end,
-})
-for _, b in ipairs(vim.api.nvim_list_bufs()) do
-	map_triggers(b)
+--- Install the keyd triggers on every current and future buffer.
+function M.setup()
+	vim.api.nvim_create_autocmd("BufEnter", {
+		desc = "Install keyd triggers",
+		callback = function()
+			map_triggers(vim.api.nvim_get_current_buf())
+		end,
+	})
+	for _, b in ipairs(vim.api.nvim_list_bufs()) do
+		map_triggers(b)
+	end
 end
 
 return M

@@ -3,10 +3,12 @@
 
 local M = {}
 
-require("lsp.setup")
-require("lsp.keys")
-require("lsp.features.highlight").setup()
-require("lsp.features.info")
-require("lsp.features.endhints")
+function M.setup()
+	require("lsp.setup")
+	require("lsp.keys")
+	require("lsp.features.highlight").setup()
+	require("lsp.features.info")
+	require("lsp.features.endhints")
+end
 
 return M

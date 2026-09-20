@@ -18,6 +18,8 @@ local theme = require("ui.theme")
 local status = require("ui.status")
 local surface = require("ui.surface")
 
+local M = {}
+
 -- mode -> { label, anchor group, printable name (for hl group names) }
 local MODE = {
 	n = { "NORMAL", "Directory", "Normal" }, -- blue
@@ -233,21 +235,26 @@ local function right_str()
 	return " " .. table.concat(parts, " ") .. " "
 end
 
--- Mode is now shown in the statusline; hide the legacy "-- INSERT --" message.
-vim.o.showmode = false
+--- Install the statusline expression and click handler.
+function M.setup()
+	-- Mode is now shown in the statusline; hide the legacy "-- INSERT --" message.
+	vim.o.showmode = false
 
--- Compose with the 0.12 default: prepend left sections, splice the right
--- sections just before the ruler. If the default ever changes shape (the
--- ruler fragment no longer matches), fall back to appending at the very end.
-local left = surface.expr("StatuslineLeft", left_str)
-local right = surface.expr("StatuslineRight", right_str)
-surface.clickable("StatuslineLspClick", lsp_click)
+	-- Compose with the 0.12 default: prepend left sections, splice the right
+	-- sections just before the ruler. If the default ever changes shape (the
+	-- ruler fragment no longer matches), fall back to appending at the very end.
+	local left = surface.expr("StatuslineLeft", left_str)
+	local right = surface.expr("StatuslineRight", right_str)
+	surface.clickable("StatuslineLspClick", lsp_click)
 
-local default = vim.o.statusline
-local RULER = "%{% &ruler ? ( &rulerformat == '' ? '%-14.(%l,%c%V%) %P' : &rulerformat ) : '' %}"
-local start, finish = default:find(RULER, 1, true)
-if start then
-	vim.o.statusline = left .. default:sub(1, start - 1) .. right .. default:sub(start)
-else
-	vim.o.statusline = left .. default .. right
+	local default = vim.o.statusline
+	local RULER = "%{% &ruler ? ( &rulerformat == '' ? '%-14.(%l,%c%V%) %P' : &rulerformat ) : '' %}"
+	local start, finish = default:find(RULER, 1, true)
+	if start then
+		vim.o.statusline = left .. default:sub(1, start - 1) .. right .. default:sub(start)
+	else
+		vim.o.statusline = left .. default .. right
+	end
 end
+
+return M

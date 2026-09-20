@@ -1,14 +1,12 @@
+--- Built-in extras: undo tree, diff winbar, :Gdiff, yank flash.
+
 local status = require("ui.status")
 local map = require("util").map
 local proc = require("util.proc")
 local buf = require("ui.buf")
 local notify = require("ui.msg").scoped("Gdiff")
 
--- 0.12 built-in undo tree.
-vim.cmd("packadd nvim.undotree")
-
--- Diff windows: label them in the winbar and show the fold column.
-vim.opt.diffopt:append("foldcolumn:2")
+local M = {}
 
 -- Winbar for diff windows (side + filename + hints); cleared on diffoff.
 local function setup_diff_winbar(winid)
@@ -25,62 +23,72 @@ local function setup_diff_winbar(winid)
 	end)
 end
 
-vim.api.nvim_create_autocmd("WinEnter", {
-	desc = "Label diff windows in the winbar",
-	callback = function()
+function M.setup()
+	-- 0.12 built-in undo tree.
+	vim.cmd("packadd nvim.undotree")
+
+	-- Diff windows: label them in the winbar and show the fold column.
+	vim.opt.diffopt:append("foldcolumn:2")
+
+	vim.api.nvim_create_autocmd("WinEnter", {
+		desc = "Label diff windows in the winbar",
+		callback = function()
+			setup_diff_winbar()
+		end,
+	})
+
+	-- :Gdiff — diff the current file against HEAD: HEAD version in a scratch
+	-- buffer (vertical split, nofile) with :diffthis in both windows.
+	-- Key is <leader>gd; diffview.nvim still owns <leader>gv until it's dropped.
+	map("n", "<leader>gd", "<cmd>Gdiff<cr>", { desc = "Diff current file vs HEAD" })
+	vim.api.nvim_create_user_command("Gdiff", function()
+		local rel = vim.fn.expand("%:~:.")
+		if rel == "" then
+			notify.warn("no file name")
+			return
+		end
+		-- git show resolves paths from the repo root, so prepend the cwd prefix.
+		local prefix, perr = proc.sync({ "git", "rev-parse", "--show-prefix" })
+		if not prefix then
+			notify.error(perr or "not a git repository")
+			return
+		end
+		local repo_path = vim.trim(prefix) .. rel
+		local out, oerr = proc.sync({ "git", "show", "HEAD:" .. repo_path })
+		if not out then
+			notify.error(oerr or "git show failed")
+			return
+		end
+
+		local orig_ft = vim.bo.filetype
+		vim.cmd("vnew")
+		buf.set(0, { buftype = "nofile", bufhidden = "wipe", filetype = orig_ft })
+		vim.api.nvim_buf_set_name(0, rel .. " (HEAD)")
+		local lines = vim.split(out, "\n", { plain = true })
+		if lines[#lines] == "" then
+			lines[#lines] = nil -- git show output ends with a newline
+		end
+		vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+		vim.bo.modified = false
+
+		-- Tag the scratch pane as R, the original as L, then label both.
+		vim.w.diff_side = "R"
+		local scratch_win = vim.api.nvim_get_current_win()
+		vim.cmd("diffthis")
+		vim.cmd("wincmd p")
+		vim.w.diff_side = "L"
+		vim.cmd("diffthis")
+		setup_diff_winbar(scratch_win)
 		setup_diff_winbar()
-	end,
-})
+	end, {})
 
--- :Gdiff — diff the current file against HEAD: HEAD version in a scratch
--- buffer (vertical split, nofile) with :diffthis in both windows.
--- Key is <leader>gd; diffview.nvim still owns <leader>gv until it's dropped.
-map("n", "<leader>gd", "<cmd>Gdiff<cr>", { desc = "Diff current file vs HEAD" })
-vim.api.nvim_create_user_command("Gdiff", function()
-	local rel = vim.fn.expand("%:~:.")
-	if rel == "" then
-		notify.warn("no file name")
-		return
-	end
-	-- git show resolves paths from the repo root, so prepend the cwd prefix.
-	local prefix, perr = proc.sync({ "git", "rev-parse", "--show-prefix" })
-	if not prefix then
-		notify.error(perr or "not a git repository")
-		return
-	end
-	local repo_path = vim.trim(prefix) .. rel
-	local out, oerr = proc.sync({ "git", "show", "HEAD:" .. repo_path })
-	if not out then
-		notify.error(oerr or "git show failed")
-		return
-	end
+	-- Flash the yanked region (native |vim.hl.on_yank()|).
+	vim.api.nvim_create_autocmd("TextYankPost", {
+		desc = "Highlight yanked text",
+		callback = function()
+			vim.hl.on_yank({ higroup = "IncSearch", timeout = 300 })
+		end,
+	})
+end
 
-	local orig_ft = vim.bo.filetype
-	vim.cmd("vnew")
-	buf.set(0, { buftype = "nofile", bufhidden = "wipe", filetype = orig_ft })
-	vim.api.nvim_buf_set_name(0, rel .. " (HEAD)")
-	local lines = vim.split(out, "\n", { plain = true })
-	if lines[#lines] == "" then
-		lines[#lines] = nil -- git show output ends with a newline
-	end
-	vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
-	vim.bo.modified = false
-
-	-- Tag the scratch pane as R, the original as L, then label both.
-	vim.w.diff_side = "R"
-	local scratch_win = vim.api.nvim_get_current_win()
-	vim.cmd("diffthis")
-	vim.cmd("wincmd p")
-	vim.w.diff_side = "L"
-	vim.cmd("diffthis")
-	setup_diff_winbar(scratch_win)
-	setup_diff_winbar()
-end, {})
-
--- Flash the yanked region (native |vim.hl.on_yank()|).
-vim.api.nvim_create_autocmd("TextYankPost", {
-	desc = "Highlight yanked text",
-	callback = function()
-		vim.hl.on_yank({ higroup = "IncSearch", timeout = 300 })
-	end,
-})
+return M

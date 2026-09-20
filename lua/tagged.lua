@@ -9,8 +9,7 @@ local util = require("util")
 
 local map = util.map
 
--- Native, live paired-tag rename where the language server supports it.
-vim.lsp.linked_editing_range.enable(true)
+local M = {}
 
 -- filetype -> treesitter node types: element / start tag / start tag name /
 -- end tag / end tag name (mirrors nvim-ts-autotag's per-grammar config).
@@ -422,9 +421,17 @@ local function attach(buf)
 	end)
 end
 
-api.nvim_create_autocmd("FileType", {
-	desc = "Enable native tag close/rename helpers",
-	callback = function(ev)
-		attach(ev.buf)
-	end,
-})
+--- Enable native tag close/rename helpers.
+function M.setup()
+	-- Native, live paired-tag rename where the language server supports it.
+	vim.lsp.linked_editing_range.enable(true)
+
+	api.nvim_create_autocmd("FileType", {
+		desc = "Enable native tag close/rename helpers",
+		callback = function(ev)
+			attach(ev.buf)
+		end,
+	})
+end
+
+return M

@@ -240,8 +240,8 @@ file to keep it loaded but inactive.
     ├── loupe/               the fuzzy finder
     │   ├── backend/         enumeration/search backends (fd, rg, git, nvim, lsp)
     │   └── source/          picker modes (files, dirs, buffers, recent, changed, grep, symbols, doc symbols, diagnostics)
-    ├── ui/                  theme, float, highlights, status, buffer/window helpers, preview
-    └── util/                process wrapper, text field, debounce
+    ├── ui/                  theme, msg, surface, float, highlights, status, buffer/window helpers
+    └── util/                process wrapper, file read, text field, debounce
 ```
 
 ## Health & tests
