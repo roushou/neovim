@@ -26,6 +26,7 @@ local M = {}
 
 local S = nil
 local run_search
+local reload
 
 local function active()
 	return S ~= nil and S.active
@@ -43,6 +44,18 @@ local function page()
 		return math.max(1, vim.api.nvim_win_get_height(S.drawer_win) - 1)
 	end
 	return 10
+end
+
+--- Keep the selection valid: select the first match once results exist.
+local function normalize_index()
+	local n = #S.matches
+	if n == 0 then
+		S.index = 0
+	elseif S.index < 1 then
+		S.index = 1
+	elseif S.index > n then
+		S.index = n
+	end
 end
 
 --- Wrap raw dynamic results as matches (no client-side ranking).
@@ -72,11 +85,7 @@ local function refresh(immediate)
 	local matches =
 		backend.match(S.query, S.candidates, config.get().max_results, { root = S.root, mode = S.source.name })
 	S.matches = matches
-	if #matches == 0 then
-		S.index = 0
-	elseif S.index > #matches then
-		S.index = #matches
-	end
+	normalize_index()
 end
 
 --- Move the selection onto the match with relative path `rel`, if present.
@@ -133,11 +142,7 @@ run_search = function()
 		session.candidates = cands
 		session.loaded = true
 		session.matches = wrap(cands)
-		if #session.matches == 0 then
-			session.index = 0
-		elseif session.index > #session.matches then
-			session.index = #session.matches
-		end
+		normalize_index()
 		render()
 	end)
 end
@@ -205,12 +210,20 @@ local function run_action(name, value)
 			refresh()
 			focus(rel)
 		end
+	elseif name == "duplicate" then
+		local rel = action.duplicate(ctx, value)
+		if rel then
+			S.query = ""
+			S.caret = 0
+			refresh()
+			focus(rel)
+		end
 	end
 	render()
 end
 
 --- (Re)enumerate the current root/source asynchronously and refresh the view.
-local function reload()
+function reload()
 	if not active() then
 		return
 	end
@@ -254,6 +267,62 @@ local function reload()
 	end
 end
 
+--- Toggle the mark on the current match.
+local function toggle_mark()
+	local item = current()
+	if not item then
+		return
+	end
+	local key = item.cand.abs
+	if S.marked[key] then
+		S.marked[key] = nil
+	else
+		S.marked[key] = true
+	end
+end
+
+--- Move the root up one directory.
+local function go_parent()
+	local parent = vim.fs.dirname(S.root)
+	if not parent or parent == "" or parent == S.root then
+		return
+	end
+	S.root = parent
+	S.query = ""
+	S.caret = 0
+	S.git = nil
+	S.marked = {}
+	reload()
+end
+
+--- Reset to the project root resolved when the picker opened.
+local function go_root()
+	S.root = S.project_root
+	S.query = ""
+	S.caret = 0
+	S.git = nil
+	S.marked = {}
+	reload()
+end
+
+--- Send marked candidates (or the current one) to the quickfix list.
+local function quickfix()
+	local items = {}
+	for _, c in ipairs(S.candidates) do
+		if S.marked[c.abs] then
+			items[#items + 1] = c
+		end
+	end
+	if #items == 0 then
+		local item = current()
+		if not item then
+			return
+		end
+		items = { item.cand }
+	end
+	action.quickfix(items)
+end
+
 --- Close the picker and return to the window it was opened from.
 function M.close()
 	if not active() then
@@ -261,6 +330,7 @@ function M.close()
 	end
 	local origin = S.origin_win
 	local guicursor = S.guicursor
+	local cursor = S.origin_cursor
 	S.active = false
 	if S.search_timer then
 		S.search_timer:close()
@@ -278,6 +348,9 @@ function M.close()
 	end
 	if origin and vim.api.nvim_win_is_valid(origin) then
 		vim.api.nvim_set_current_win(origin)
+		if cursor then
+			pcall(vim.api.nvim_win_set_cursor, origin, cursor)
+		end
 	end
 end
 
@@ -357,20 +430,24 @@ function M.open()
 	end
 	local cfg = config.get()
 	local origin = vim.api.nvim_get_current_win()
+	local root = cfg.root()
 
 	S = {
 		active = true,
 		loaded = false,
 		origin_win = origin,
 		origin_buf = vim.api.nvim_win_get_buf(origin),
+		origin_cursor = vim.api.nvim_win_get_cursor(origin),
 		gen = 0,
-		root = cfg.root(),
+		root = root,
+		project_root = root,
 		source = source.get(cfg.default_source or "files") or source.get("files"),
 		candidates = {},
 		query = "",
 		caret = 0,
 		matches = {},
 		index = 0,
+		marked = {},
 		git = nil,
 		prompt = nil,
 		menu = nil,
@@ -426,8 +503,15 @@ function M.open()
 		set_source = set_source,
 		run_action = run_action,
 		mouse_select = mouse_select,
-		yank = function(item)
-			action.yank({ session = S, item = item, root = S.root })
+		go_parent = go_parent,
+		go_root = go_root,
+		toggle_mark = toggle_mark,
+		quickfix = quickfix,
+		yank = function(item, variant)
+			action.yank({ session = S, item = item, root = S.root }, variant)
+		end,
+		open_external = function(item)
+			action.open_external({ session = S, item = item, root = S.root })
 		end,
 	})
 end

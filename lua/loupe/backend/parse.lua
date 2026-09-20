@@ -10,7 +10,7 @@ local M = {}
 
 --- Build a candidate from a root-relative path.
 function M.candidate(root, rel, dir)
-	return { rel = rel, abs = root .. "/" .. rel, dir = dir == true }
+	return { rel = rel, abs = vim.fs.joinpath(root, rel), dir = dir == true }
 end
 
 --- Parse newline-delimited root-relative paths into deduped candidates.
@@ -71,7 +71,7 @@ function M.status(stdout, root)
 		local xy = entry:sub(1, 2)
 		local rel = entry:sub(4)
 		if rel ~= "" then
-			out[#out + 1] = { rel = rel, abs = root .. "/" .. rel, label = rel, dir = false }
+			out[#out + 1] = { rel = rel, abs = vim.fs.joinpath(root, rel), label = rel, dir = false }
 		end
 		n = n + (xy:find("[RC]") and 2 or 1)
 	end
@@ -86,7 +86,7 @@ function M.vimgrep(stdout, root)
 		if rel then
 			out[#out + 1] = {
 				rel = rel,
-				abs = root .. "/" .. rel,
+				abs = vim.fs.joinpath(root, rel),
 				label = rel .. ":" .. lnum .. ": " .. text,
 				lnum = tonumber(lnum),
 				col = tonumber(col) - 1,
@@ -105,7 +105,7 @@ function M.gitgrep(stdout, root)
 		if rel then
 			out[#out + 1] = {
 				rel = rel,
-				abs = root .. "/" .. rel,
+				abs = vim.fs.joinpath(root, rel),
 				label = rel .. ":" .. lnum .. ": " .. text,
 				lnum = tonumber(lnum),
 				col = 0,

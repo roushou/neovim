@@ -15,6 +15,7 @@ local ns = vim.api.nvim_create_namespace("loupe_matches")
 
 local function define_highlights()
 	vim.api.nvim_set_hl(0, "LoupeMatch", { link = "Search", default = true })
+	vim.api.nvim_set_hl(0, "LoupeMark", { link = "DiagnosticInfo", default = true })
 	vim.api.nvim_set_hl(0, "LoupePrompt", { link = "Title", default = true })
 	vim.api.nvim_set_hl(0, "LoupePromptCaret", { link = "LoupePrompt", default = true })
 	vim.api.nvim_set_hl(0, "LoupeCursor", { blend = 100, nocombine = true })
@@ -101,13 +102,18 @@ local function build(session, cfg)
 	elseif #session.matches == 0 then
 		lines[#lines + 1] = "  (no matches)"
 	else
+		local has_marks = session.marked and next(session.marked) ~= nil
 		for _, m in ipairs(session.matches) do
 			local cand = m.cand
-			local icon, icon_hl, prefix = "", nil, ""
+			local mark = ""
+			if has_marks then
+				mark = session.marked[cand.abs] and "● " or "  "
+			end
+			local icon, icon_hl = "", nil
 			if cfg.icons then
 				icon, icon_hl = icons.get(cand)
-				prefix = icon .. " "
 			end
+			local prefix = mark .. (icon ~= "" and (icon .. " ") or "")
 
 			local label = cand.label or cand.rel
 			if cand.dir and not label:match("/$") then
@@ -128,7 +134,9 @@ local function build(session, cfg)
 			lines[#lines + 1] = line
 			meta[#meta + 1] = {
 				prefix = #prefix,
+				mark = has_marks and (session.marked[cand.abs] and 2 or 0) or 0,
 				icon = #icon,
+				icon_start = #mark,
 				icon_hl = icon_hl,
 				git_start = git_start,
 				git_len = git_len,
@@ -165,7 +173,10 @@ function M.render(session, cfg)
 				hl.range(buf, ns, i, mt.prefix + col, mt.prefix + col + 1, "LoupeMatch")
 			end
 			if mt.icon > 0 then
-				hl.range(buf, ns, i, 0, mt.icon, mt.icon_hl)
+				hl.range(buf, ns, i, mt.icon_start, mt.icon_start + mt.icon, mt.icon_hl)
+			end
+			if mt.mark and mt.mark > 0 then
+				hl.range(buf, ns, i, 0, mt.mark, "LoupeMark")
 			end
 			if mt.git_start then
 				hl.range(buf, ns, i, mt.git_start, mt.git_start + mt.git_len, mt.git_hl)

@@ -57,6 +57,10 @@ M.defaults = {
 	--- Order the empty-query list by frecency (recently/frequently opened).
 	frecency = true,
 
+	--- Move deleted files to the OS trash instead of unlinking. When no trash
+	--- tool is available, files are unlinked and directories are refused.
+	trash = true,
+
 	--- Prompt prefix rendered before the query.
 	prompt = "> ",
 
@@ -83,6 +87,8 @@ M.defaults = {
 			["<C-C>"] = "close",
 			["<C-X>"] = "menu",
 			["<C-O>"] = "sources",
+			["<C-R>"] = "root",
+			["<Tab>"] = "mark",
 			["<C-P>"] = "up",
 			["<Up>"] = "up",
 			["<C-N>"] = "down",
@@ -110,6 +116,12 @@ M.defaults = {
 			["d"] = "delete",
 			["a"] = "create",
 			["y"] = "yank",
+			["Y"] = "yank_rel",
+			["n"] = "yank_name",
+			["D"] = "yank_dir",
+			["c"] = "duplicate",
+			["o"] = "open_external",
+			["q"] = "quickfix",
 		},
 		sources = {
 			["f"] = "files",

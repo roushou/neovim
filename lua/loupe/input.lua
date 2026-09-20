@@ -10,7 +10,8 @@
 ---
 --- `ctx` fields: `state` (session table), `is_active`, `render`, `close`,
 --- `choose`, `reload`, `refresh`, `move`, `page`, `current`, `set_query`,
---- `start_prompt`, `set_source`, `run_action`, `mouse_select`, `yank`.
+--- `start_prompt`, `set_source`, `run_action`, `mouse_select`, `yank`,
+--- `go_parent`, `go_root`, `toggle_mark`, `quickfix`, `open_external`.
 
 local tf = require("util.textfield")
 local config = require("loupe.config")
@@ -77,9 +78,21 @@ local function handle_menu(ctx, map, key)
 	elseif action == "delete" then
 		ctx.start_prompt("Delete " .. item.cand.rel .. "? [y/N] ", "", "delete")
 	elseif action == "create" then
-		ctx.start_prompt("Add: ", "", "create")
+		ctx.start_prompt("Add (end with / for a dir): ", "", "create")
+	elseif action == "duplicate" then
+		ctx.start_prompt("Duplicate to: ", item.cand.rel, "duplicate")
 	elseif action == "yank" then
-		ctx.yank(item)
+		ctx.yank(item, "abs")
+	elseif action == "yank_rel" then
+		ctx.yank(item, "rel")
+	elseif action == "yank_name" then
+		ctx.yank(item, "name")
+	elseif action == "yank_dir" then
+		ctx.yank(item, "dir")
+	elseif action == "open_external" then
+		ctx.open_external(item)
+	elseif action == "quickfix" then
+		ctx.quickfix()
 	end
 end
 
@@ -111,6 +124,11 @@ local function handle_browse(ctx, map, ch, key)
 		S.menu = "actions"
 	elseif action == "sources" then
 		S.menu = "sources"
+	elseif action == "root" then
+		ctx.go_root()
+	elseif action == "mark" then
+		ctx.toggle_mark()
+		ctx.move(1)
 	elseif action == "select" then
 		ctx.mouse_select()
 	elseif action == "open_mouse" then
@@ -132,7 +150,11 @@ local function handle_browse(ctx, map, ch, key)
 	elseif action == "delete_word" then
 		ctx.set_query(tf.delete_word(S.query, S.caret))
 	elseif action == "backspace" then
-		ctx.set_query(tf.backspace(S.query, S.caret))
+		if S.query == "" then
+			ctx.go_parent()
+		else
+			ctx.set_query(tf.backspace(S.query, S.caret))
+		end
 	elseif action == "delete" then
 		ctx.set_query(tf.delete(S.query, S.caret))
 	elseif action == "caret_left" then
