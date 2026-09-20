@@ -12,6 +12,7 @@
 
 local theme = require("ui.theme")
 local status = require("ui.status")
+local util = require("util")
 
 local M = {}
 
@@ -21,16 +22,22 @@ local MAX_VISIBLE = 15
 -- Space padding inside each buffer segment, around the label.
 local PADDING = 2
 
--- active-buffer chip colors (derived from the active colorscheme)
-local palette = {}
-
-local function refresh()
-	palette.bg = theme.bg({ "StatusLine", "Normal" }, 0x16161d)
-	palette.accent = theme.fg({ "Directory", "Function" }, palette.bg)
-	vim.api.nvim_set_hl(0, "TablineActive", { fg = palette.bg, bg = palette.accent, bold = true })
-	vim.api.nvim_set_hl(0, "TablineActiveTail", { fg = palette.accent })
+-- active-buffer chip colors (derived from the active colorscheme and kept
+-- applied by `theme.hl`)
+local function tab_bg()
+	return theme.bg({ "StatusLine", "Normal" }, 0x16161d)
 end
-theme.on_colorscheme(refresh)
+
+local function tab_accent()
+	return theme.fg({ "Directory", "Function" }, tab_bg())
+end
+
+theme.hl("TablineActive", function()
+	return { fg = tab_bg(), bg = tab_accent(), bold = true }
+end)
+theme.hl("TablineActiveTail", function()
+	return { fg = tab_accent() }
+end)
 
 local function listed_buffers()
 	local buffers = {}
@@ -178,7 +185,7 @@ vim.o.tabline = "%{%v:lua.TablineRender()%}"
 
 -- redraw when the buffer list / names / modified state can change
 vim.api.nvim_create_autocmd({ "BufAdd", "BufDelete", "BufEnter", "BufWipeout", "BufFilePost" }, {
-	group = vim.api.nvim_create_augroup("tabline_redraw", { clear = true }),
+	group = util.augroup("tabline_redraw"),
 	callback = function()
 		vim.cmd("redrawtabline")
 	end,

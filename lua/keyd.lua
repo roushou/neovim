@@ -9,10 +9,12 @@
 --- unmapped and re-mapped on the next tick, which avoids infinite recursion
 --- while letting the real mapping run.
 
-local map = require("util").map
+local util = require("util")
 local theme = require("ui.theme")
 local float = require("ui.float")
 local hl = require("ui.hl")
+
+local map = util.map
 
 local M = {}
 
@@ -64,11 +66,12 @@ end
 -- persistent timer for the show delay (works while getcharstr is blocking)
 local show_timer = vim.loop.new_timer()
 
-local function refresh()
-	vim.api.nvim_set_hl(0, "KeydNextKey", { fg = theme.fg("Function", 0xffffff), bold = true })
-	vim.api.nvim_set_hl(0, "KeydDesc", { fg = theme.fg("Comment", 0xaaaaaa) })
-end
-theme.on_colorscheme(refresh)
+theme.hl("KeydNextKey", function()
+	return { fg = theme.fg("Function", 0xffffff), bold = true }
+end)
+theme.hl("KeydDesc", function()
+	return { fg = theme.fg("Comment", 0xaaaaaa) }
+end)
 
 --- Mappings for a buffer, keyed by raw lhs (buffer-local wins over global).
 local function clues_get_all(buf_id)
@@ -226,7 +229,6 @@ trigger_rhs = function(trigger)
 		if vim.bo.filetype == "ministarter" then
 			return
 		end
-		refresh()
 
 		local buf_id = vim.api.nvim_get_current_buf()
 		state = { query = { trigger }, buf_id = buf_id, trigger = trigger, win = nil, buf = nil }
@@ -296,20 +298,18 @@ trigger_rhs = function(trigger)
 end
 
 local function map_triggers(buf)
-	if vim.b[buf].keyd_attached then
-		return
-	end
-	vim.b[buf].keyd_attached = true
 	if vim.bo[buf].filetype == "ministarter" then
 		return
 	end
-	for _, t in ipairs(TRIGGERS) do
-		map("n", vim.fn.keytrans(t), trigger_rhs(t), {
-			buf = buf,
-			nowait = true,
-			desc = "Keyd: " .. vim.fn.keytrans(t),
-		})
-	end
+	util.attach_once(buf, "keyd_attached", function()
+		for _, t in ipairs(TRIGGERS) do
+			map("n", vim.fn.keytrans(t), trigger_rhs(t), {
+				buf = buf,
+				nowait = true,
+				desc = "Keyd: " .. vim.fn.keytrans(t),
+			})
+		end
+	end)
 end
 
 -- triggers are buffer-local; install on every buffer as it's entered

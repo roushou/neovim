@@ -36,42 +36,51 @@ local MODE = {
 	r = { "PROMPT", "Comment", "Prompt" }, -- dim
 }
 
-local palette = {}
+local FG_FALLBACK = 0xdcd7ba
+local BG_FALLBACK = 0x16161d
 
--- [mode name] -> chip group, tail group
-local GROUPS = {}
-
--- Read resolved colors from the active colorscheme and (re)build the derived
--- highlight groups. Runs on load and on every |ColorScheme|.
-local function refresh()
-	palette.bg = theme.bg({ "StatusLine", "Normal" }, 0x16161d)
-	palette.fg = theme.fg({ "StatusLine", "Normal" }, 0xdcd7ba)
-	for _, entry in pairs(MODE) do
-		palette[entry[2]] = theme.fg(entry[2], palette.fg)
-	end
-	palette.git = theme.fg("DiagnosticHint", palette.fg)
-	palette.gitcount = theme.fg("Comment", palette.fg)
-	palette.ft = theme.fg("Function", palette.fg)
-	palette.search = theme.fg("Constant", palette.fg)
-	palette.rec = theme.fg("Error", palette.fg)
-	palette.lsp = theme.fg({ "DiagnosticOk", "DiagnosticInfo" }, palette.fg)
-
-	for key, entry in pairs(MODE) do
-		local accent = palette[entry[2]]
-		local chip = "StatusLineMode" .. entry[3]
-		local tail = "StatusLineModeTail" .. entry[3]
-		vim.api.nvim_set_hl(0, chip, { fg = palette.bg, bg = accent, bold = true })
-		vim.api.nvim_set_hl(0, tail, { fg = accent, bg = palette.bg })
-		GROUPS[key] = { chip = chip, tail = tail }
-	end
-	-- Info sections: plain fg on the StatusLine background.
-	vim.api.nvim_set_hl(0, "StatusLineGit", { fg = palette.git })
-	vim.api.nvim_set_hl(0, "StatusLineGitCount", { fg = palette.gitcount })
-	vim.api.nvim_set_hl(0, "StatusLineFiletype", { fg = palette.ft })
-	vim.api.nvim_set_hl(0, "StatusLineSearch", { fg = palette.search })
-	vim.api.nvim_set_hl(0, "StatusLineRecording", { fg = palette.rec })
-	vim.api.nvim_set_hl(0, "StatusLineLsp", { fg = palette.lsp })
+local function sl_fg()
+	return theme.fg({ "StatusLine", "Normal" }, FG_FALLBACK)
 end
+
+local function sl_bg()
+	return theme.bg({ "StatusLine", "Normal" }, BG_FALLBACK)
+end
+
+-- [mode name] -> chip group, tail group. Groups are derived from the active
+-- colorscheme and kept applied by `theme.hl`.
+local GROUPS = {}
+for key, entry in pairs(MODE) do
+	local chip = "StatusLineMode" .. entry[3]
+	local tail = "StatusLineModeTail" .. entry[3]
+	GROUPS[key] = { chip = chip, tail = tail }
+	theme.hl(chip, function()
+		return { fg = sl_bg(), bg = theme.fg(entry[2], sl_fg()), bold = true }
+	end)
+	theme.hl(tail, function()
+		return { fg = theme.fg(entry[2], sl_fg()), bg = sl_bg() }
+	end)
+end
+
+-- Info sections: plain fg on the StatusLine background.
+theme.hl("StatusLineGit", function()
+	return { fg = theme.fg("DiagnosticHint", sl_fg()) }
+end)
+theme.hl("StatusLineGitCount", function()
+	return { fg = theme.fg("Comment", sl_fg()) }
+end)
+theme.hl("StatusLineFiletype", function()
+	return { fg = theme.fg("Function", sl_fg()) }
+end)
+theme.hl("StatusLineSearch", function()
+	return { fg = theme.fg("Constant", sl_fg()) }
+end)
+theme.hl("StatusLineRecording", function()
+	return { fg = theme.fg("Error", sl_fg()) }
+end)
+theme.hl("StatusLineLsp", function()
+	return { fg = theme.fg({ "DiagnosticOk", "DiagnosticInfo" }, sl_fg()) }
+end)
 
 local function mode_info()
 	local m = vim.fn.mode(1) -- includes submodes (e.g. "ic", "no", "Rv")
@@ -223,8 +232,6 @@ function _G.StatuslineRight()
 	end
 	return " " .. table.concat(parts, " ") .. " "
 end
-
-theme.on_colorscheme(refresh)
 
 -- Mode is now shown in the statusline; hide the legacy "-- INSERT --" message.
 vim.o.showmode = false

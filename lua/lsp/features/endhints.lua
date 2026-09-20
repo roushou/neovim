@@ -7,6 +7,7 @@
 --- with |vim.lsp.inlay_hint.enable()|.
 
 local hl = require("ui.hl")
+local util = require("util")
 
 local M = {}
 
@@ -110,7 +111,7 @@ end
 -- Install the eol handler and auto-enable hints for inlayHint-capable
 -- clients on attach (per-filetype overrides below still apply).
 vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
-	group = vim.api.nvim_create_augroup("lsp_endhints", { clear = true }),
+	group = util.augroup("lsp_endhints"),
 	callback = function(ctx)
 		local client = vim.lsp.get_client_by_id(ctx.data.client_id)
 		if not client or not client.server_capabilities.inlayHintProvider then

@@ -13,6 +13,7 @@
 local preview = require("ui.preview")
 local buf = require("ui.buf")
 local win = require("ui.win")
+local hl = require("ui.hl")
 
 local M = {}
 
@@ -85,20 +86,13 @@ local function highlight(lnum, col, col_end)
 	if row < 0 or row >= vim.api.nvim_buf_line_count(P.buf) then
 		return
 	end
-	vim.api.nvim_buf_set_extmark(P.buf, hl_ns, row, 0, {
-		line_hl_group = "LoupePreviewLine",
-		priority = 50,
-	})
+	hl.line(P.buf, hl_ns, row, "LoupePreviewLine", { priority = 50 })
 	if col and col_end and col_end > col then
 		local line = vim.api.nvim_buf_get_lines(P.buf, row, row + 1, false)[1] or ""
 		local from = math.max(0, math.min(col, #line))
 		local to = math.max(from, math.min(col_end, #line))
 		if to > from then
-			vim.api.nvim_buf_set_extmark(P.buf, hl_ns, row, from, {
-				end_col = to,
-				hl_group = "LoupePreviewMatch",
-				priority = 200,
-			})
+			hl.range(P.buf, hl_ns, row, from, to, "LoupePreviewMatch", { priority = 200 })
 		end
 	end
 end
@@ -177,27 +171,14 @@ local function render_diagnostics(path)
 		local name = SEV_NAME[entry.sev] or "Error"
 		local glyph = SEV_GLYPH[entry.sev] or SEV_GLYPH[1]
 		for _, r in ipairs(entry.ranges) do
-			vim.api.nvim_buf_set_extmark(P.buf, diag_ns, row, r[1], {
-				end_col = r[2],
-				hl_group = r[3],
-				priority = 100,
-			})
+			hl.range(P.buf, diag_ns, row, r[1], r[2], r[3], { priority = 100 })
 		end
-		vim.api.nvim_buf_set_extmark(P.buf, diag_ns, row, 0, {
-			sign_text = glyph,
-			sign_hl_group = "DiagnosticSign" .. name,
-			priority = 100,
-		})
+		hl.sign(P.buf, diag_ns, row, glyph, "DiagnosticSign" .. name, { priority = 100 })
 		local msg = one_line(entry.message)
 		if entry.count > 1 then
 			msg = msg .. ("  +%d"):format(entry.count - 1)
 		end
-		vim.api.nvim_buf_set_extmark(P.buf, diag_ns, row, 0, {
-			virt_text = { { glyph .. " " .. msg, "DiagnosticVirtualText" .. name } },
-			virt_text_pos = "eol",
-			hl_mode = "combine",
-			priority = 300,
-		})
+		hl.virt_text(P.buf, diag_ns, row, glyph .. " " .. msg, "DiagnosticVirtualText" .. name, { priority = 300 })
 	end
 end
 

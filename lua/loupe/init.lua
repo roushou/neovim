@@ -497,7 +497,7 @@ function M.open(opts)
 	S.guicursor = vim.o.guicursor
 	vim.o.guicursor = "a:LoupeCursor"
 
-	S.augroup = vim.api.nvim_create_augroup("LoupeSession", { clear = true })
+	S.augroup = require("util").augroup("LoupeSession")
 	vim.api.nvim_create_autocmd("VimResized", {
 		group = S.augroup,
 		callback = function()

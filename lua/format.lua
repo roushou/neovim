@@ -7,6 +7,7 @@
 local M = {}
 
 local proc = require("util.proc")
+local util = require("util")
 
 local FORMATTERS = {
 	lua = { { cmd = { "stylua", "-" } } },
@@ -91,7 +92,7 @@ function M.attach()
 	-- route gq/gw through the formatters too
 	vim.o.formatexpr = "v:lua.require'format'.formatexpr()"
 	vim.api.nvim_create_autocmd("BufWritePre", {
-		group = vim.api.nvim_create_augroup("format_on_save", { clear = true }),
+		group = util.augroup("format_on_save"),
 		callback = function(args)
 			if FORMATTERS[vim.bo[args.buf].filetype] then
 				M.format(args.buf)

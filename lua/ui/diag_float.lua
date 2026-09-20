@@ -14,7 +14,7 @@ vim.diagnostic.config({
 
 -- Close on real cursor movement, ignoring the spurious same-position
 -- CursorMoved emitted on the float's opening redraw.
-local group = vim.api.nvim_create_augroup("diag_float_close", { clear = true })
+local group = require("util").augroup("diag_float_close")
 
 local open_float = vim.diagnostic.open_float
 ---@diagnostic disable-next-line: duplicate-set-field

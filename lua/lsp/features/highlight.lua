@@ -3,18 +3,15 @@
 --- LspReferenceWrite). Gated on the server's documentHighlightProvider.
 
 local theme = require("ui.theme")
+local util = require("util")
 
 local M = {}
 
-local AUGROUP = vim.api.nvim_create_augroup("lsp_document_highlight", { clear = true })
+local AUGROUP = util.augroup("lsp_document_highlight")
 
 -- kanagawa leaves LspReferenceRead undefined; fall back to LspReferenceText
--- so read references are visible, re-applied on colorscheme changes
-local function ensure_highlights()
-	if vim.tbl_isempty(vim.api.nvim_get_hl(0, { name = "LspReferenceRead" })) then
-		vim.api.nvim_set_hl(0, "LspReferenceRead", { link = "LspReferenceText" })
-	end
-end
+-- so read references are visible (default keeps a colorscheme's own value).
+theme.hl("LspReferenceRead", { link = "LspReferenceText", default = true })
 
 --- Only run when a capable client is attached to this buffer.
 local function capable(bufnr)
@@ -27,14 +24,13 @@ local function capable(bufnr)
 end
 
 function M.setup()
-	theme.on_colorscheme(ensure_highlights)
 	vim.api.nvim_create_autocmd("LspAttach", {
 		group = AUGROUP,
 		callback = function(args)
 			if not capable(args.buf) then
 				return
 			end
-			local group = vim.api.nvim_create_augroup("lsp_document_highlight_" .. args.buf, { clear = true })
+			local group = util.augroup("lsp_document_highlight_" .. args.buf)
 			vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
 				group = group,
 				buf = args.buf,

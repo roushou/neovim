@@ -5,7 +5,9 @@
 -- Needs the parsers in lua/plugins/treesitter.lua ensure_installed.
 
 local api, ts = vim.api, vim.treesitter
-local map = require("util").map
+local util = require("util")
+
+local map = util.map
 
 -- Native, live paired-tag rename where the language server supports it.
 vim.lsp.linked_editing_range.enable(true)
@@ -378,49 +380,46 @@ local function rename_tags(buf)
 end
 
 local function attach(buf)
-	if vim.b[buf].tagged_attached then
-		return
-	end
 	if not cfg_for(buf) then
 		return
 	end
-	local ok = pcall(vim.treesitter.get_parser, buf)
-	if not ok then
+	if not pcall(vim.treesitter.get_parser, buf) then
 		return
 	end
-	vim.b[buf].tagged_attached = true
-	local group = api.nvim_create_augroup("tagged-" .. buf, { clear = true })
+	util.attach_once(buf, "tagged_attached", function()
+		local group = util.augroup("tagged-" .. buf)
 
-	map("i", ">", function()
-		local row, col = unpack(api.nvim_win_get_cursor(0))
-		api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, { ">" })
-		local line = api.nvim_buf_get_lines(buf, row - 1, row, false)[1]
-		if line and prefix_closes_tag(line, col) then
-			close_tag(buf, row, col + 1)
-		end
-		-- Cursor sits right after the `>` (inside the tag) in every case.
-		api.nvim_win_set_cursor(0, { row, col + 1 })
-	end, { buf = buf })
+		map("i", ">", function()
+			local row, col = unpack(api.nvim_win_get_cursor(0))
+			api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, { ">" })
+			local line = api.nvim_buf_get_lines(buf, row - 1, row, false)[1]
+			if line and prefix_closes_tag(line, col) then
+				close_tag(buf, row, col + 1)
+			end
+			-- Cursor sits right after the `>` (inside the tag) in every case.
+			api.nvim_win_set_cursor(0, { row, col + 1 })
+		end, { buf = buf })
 
-	map("i", "/", function()
-		local row, col = unpack(api.nvim_win_get_cursor(0))
-		api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, { "/" })
-		local line = api.nvim_buf_get_lines(buf, row - 1, row, false)[1]
-		local inserted = 0
-		if line and line:sub(col, col) == "<" then
-			inserted = close_slash_tag(buf, row, col)
-		end
-		-- After `</name>` the cursor is before the `>`; otherwise after the `/`.
-		api.nvim_win_set_cursor(0, { row, col + 1 + inserted })
-	end, { buf = buf })
+		map("i", "/", function()
+			local row, col = unpack(api.nvim_win_get_cursor(0))
+			api.nvim_buf_set_text(buf, row - 1, col, row - 1, col, { "/" })
+			local line = api.nvim_buf_get_lines(buf, row - 1, row, false)[1]
+			local inserted = 0
+			if line and line:sub(col, col) == "<" then
+				inserted = close_slash_tag(buf, row, col)
+			end
+			-- After `</name>` the cursor is before the `>`; otherwise after the `/`.
+			api.nvim_win_set_cursor(0, { row, col + 1 + inserted })
+		end, { buf = buf })
 
-	api.nvim_create_autocmd("InsertLeave", {
-		group = group,
-		buf = buf,
-		callback = function()
-			rename_tags(buf)
-		end,
-	})
+		api.nvim_create_autocmd("InsertLeave", {
+			group = group,
+			buf = buf,
+			callback = function()
+				rename_tags(buf)
+			end,
+		})
+	end)
 end
 
 api.nvim_create_autocmd("FileType", {
