@@ -1,65 +1,209 @@
 # Neovim
 
-My personal Neovim configuration — built-in plugin management, declarative LSP setup, and a set of hand-rolled features (tabline, statusline, symbol pickers, formatter, keymap reveal).
+My personal Neovim configuration. Plugin management uses the built-in
+`vim.pack`, LSP servers are declared as data-only files, and the rest is
+hand-rolled: a source-based fuzzy finder (**Loupe**), statusline, tabline,
+formatter, and a handful of quality-of-life helpers.
 
-<img width="1920" height="1170" alt="Editor with Kanagawa colorscheme showing a Rust file with custom statusline and buffer tabline" src="https://github.com/user-attachments/assets/25e34511-4c41-41bd-96cd-e6eb477e057e" />
+![Editor with Kanagawa colorscheme showing a Rust file with custom statusline and buffer tabline](https://github.com/user-attachments/assets/25e34511-4c41-41bd-96cd-e6eb477e057e)
+
+<details>
+<summary>More screenshots</summary>
 
 **Lazygit**
 
-<img width="1920" height="1170" alt="Lazygit floating terminal inside Neovim" src="https://github.com/user-attachments/assets/bf47d49c-e568-4a36-99b8-8e442f6c8afa" />
+![Lazygit floating terminal inside Neovim](https://github.com/user-attachments/assets/bf47d49c-e568-4a36-99b8-8e442f6c8afa)
 
 **Custom LSP info**
 
-<img width="1920" height="1170" alt="Custom :LspInfo overview window listing attached LSP clients" src="https://github.com/user-attachments/assets/9c7394cc-cd55-4c97-8ac3-3a7e31d0b725" />
+![Custom :LspInfo overview window listing attached LSP clients](https://github.com/user-attachments/assets/9c7394cc-cd55-4c97-8ac3-3a7e31d0b725)
+
+</details>
+
+## Highlights
+
+- **Loupe** — bottom-docked fuzzy finder with a full-viewport live preview and
+  pluggable sources (files, directories, buffers, recent, changed, live grep,
+  workspace symbols).
+- **Declarative LSP** — one data-only file per server in `lsp/`, registered
+  automatically; shared capabilities live in `lua/lsp/setup.lua`.
+- **Built-in plugin management** — declared with `vim.pack.add()` and pinned in
+  `nvim-pack-lock.json`; no bootstrapping plugin.
+- **Hand-rolled UI** — statusline, buffer tabline, diagnostics float, and a
+  keymap-reveal helper rather than a full distribution.
 
 ## Requirements
 
-- Neovim **≥ 0.12** (`vim.pack`, `vim.lsp.config`, `lsp/` config dir)
+- Neovim **≥ 0.12** — uses `vim.pack`, `vim.lsp.config`, and the `lsp/` config dir
 - A [Nerd Font](https://www.nerdfonts.com/) for file icons and glyphs
-- External tools: `git`, `lazygit`, `fd`, `rg` (ripgrep)
+- `git` and `lazygit`
+- `fd` and `rg` (ripgrep) for Loupe's file and content search
 
-LSP servers are **not** bundled — install the ones you need (e.g. `lua-language-server`, `gopls`, `basedpyright-langserver`) and make sure they're on your `$PATH`.
+LSP servers are **not** bundled. Install the ones you need (`lua-language-server`,
+`gopls`, `basedpyright-langserver`, …) and make sure they are on your `$PATH`.
 
-## Setup
+## Install
 
 ```sh
 git clone https://github.com/roushou/neovim.git ~/.config/nvim
 nvim
 ```
 
-Plugins are declared in [`lua/plugins/init.lua`](./lua/plugins/init.lua) via the built-in `vim.pack.add()` and pinned in [`nvim-pack-lock.json`](./nvim-pack-lock.json); run `:vim.pack.update()` to update.
+Plugins are declared in [`lua/plugins/init.lua`](./lua/plugins/init.lua) with the
+built-in `vim.pack.add()` and pinned in
+[`nvim-pack-lock.json`](./nvim-pack-lock.json). Run `:vim.pack.update()` to
+update them.
 
-## Layout
+## Keymaps
 
+`<leader>` is <kbd>Space</kbd>. This is a selection; the full set lives in
+[`lua/keymaps.lua`](./lua/keymaps.lua) and the `after/plugin/` configs.
+
+### Files & search
+
+| Key          | Action                              |
+| ------------ | ----------------------------------- |
+| `<C-p>`      | Loupe — fuzzy finder (see below)    |
+| `<leader>fw` | Live grep (`mini.pick`)             |
+| `<C-n>`      | Toggle file explorer (neo-tree)     |
+
+### Buffers & windows
+
+| Key                   | Action                  |
+| --------------------- | ----------------------- |
+| `<C-h>` `<C-j>` `<C-k>` `<C-l>` | Move between windows |
+| `H` / `L`             | Previous / next buffer  |
+| `<leader>x`           | Close buffer            |
+| `<leader>w` / `<leader>q` | Save / quit         |
+
+### LSP & diagnostics
+
+| Key                     | Action                          |
+| ----------------------- | ------------------------------- |
+| `<leader>li`            | LSP info                        |
+| `<leader>ss`            | Document symbols                |
+| `<leader>sw`            | Workspace symbols               |
+| `gd`                    | LSP definitions (Trouble)       |
+| `<leader>tt`            | Toggle Trouble                  |
+| `<leader>td` / `<leader>tw` | Document / workspace diagnostics |
+| `<leader>tq` / `<leader>tl` | Quickfix / location list    |
+| `[c`                    | Go to Treesitter context        |
+
+### Git
+
+| Key           | Action                    |
+| ------------- | ------------------------- |
+| `<leader>gg`  | LazyGit                   |
+| `<leader>gv`  | Toggle Diffview           |
+| `g[` / `g]`   | Previous / next hunk      |
+| `<leader>gp`  | Preview hunk inline       |
+| `<leader>gd`  | Diff this                 |
+
+### Editing
+
+| Key                           | Action                        |
+| ----------------------------- | ----------------------------- |
+| `jj` / `jk` (insert)          | Escape                        |
+| `j` / `k`                     | Soft down / up                |
+| `<` / `>` (visual)            | Indent, keep selection        |
+| `<leader>y` / `<leader>p` (visual) | Yank / paste clipboard    |
+
+## Loupe
+
+Loupe (`<C-p>`) is a bottom-docked fuzzy finder with a full-viewport live
+preview. It is **source-based**: the source menu changes *what* is being
+searched, while matching, previewing, and actions stay the same. Browsing never
+opens a file buffer — files are read into a scratch buffer, and only the choose
+actions create real buffers.
+
+Public API: `require("loupe").open()`, `.close()`, `.toggle()`, `.setup(opts)`.
+
+### Sources
+
+Open the source menu with `<C-o>`.
+
+| Key | Source        | Backend            | Notes                                  |
+| --- | ------------- | ------------------ | -------------------------------------- |
+| `f` | Files         | `fd` → `rg` → `git`| Project files, gitignore-aware         |
+| `d` | Directories   | `fd`               | `<CR>` descends into the directory     |
+| `b` | Buffers       | builtin            | Reuses the loaded buffer, unsaved edits intact |
+| `r` | Recent        | frecency store     | Most-frequently / recently opened      |
+| `c` | Changed       | `git status`       | Staged, unstaged, and untracked        |
+| `g` | Grep          | `rg` → `git grep`  | Live content search                    |
+| `s` | Symbols       | LSP                | Workspace symbols                      |
+
+`grep` and `symbols` are **live**: each keystroke re-queries the backend
+(debounced), and the preview jumps to the match.
+
+### Browsing
+
+| Key                              | Action                                    |
+| -------------------------------- | ----------------------------------------- |
+| `<CR>`                           | Open                                      |
+| `<C-s>` / `<C-v>` / `<C-t>`      | Open in split / vsplit / tab              |
+| `<C-o>`                          | Source menu                               |
+| `<C-x>`                          | Action menu (see below)                   |
+| `<C-r>`                          | Jump back to the project root             |
+| `<Tab>`                          | Mark entry (marks feed `quickfix`)        |
+| `<C-p>` `<Up>` / `<C-n>` `<Down>`| Move up / down                            |
+| `<C-d>` / `<C-u>`                | Page down / up                            |
+| `<Left>` `<C-b>` / `<Right>` `<C-f>` | Move the query caret                  |
+| `<Home>` `<C-a>` / `<End>` `<C-e>` | Jump to start / end of the query        |
+| `<BS>` / `<Del>` / `<C-w>`       | Delete character / word                   |
+| `<Esc>` / `<C-c>`                | Close                                     |
+| Mouse                            | Click to select, double-click to open, wheel to scroll |
+
+<kbd>Backspace</kbd> on an empty query walks **up one directory**.
+
+### Actions
+
+Open the action menu with `<C-x>`, then:
+
+| Key | Action                                                        |
+| --- | ------------------------------------------------------------- |
+| `r` | Rename / move (the target may point into another directory)   |
+| `d` | Delete (to the OS trash; falls back to unlink for files)      |
+| `a` | Add a file — end with `/` to create a directory               |
+| `c` | Duplicate                                                     |
+| `y` | Yank absolute path                                            |
+| `Y` | Yank relative path                                            |
+| `n` | Yank filename                                                 |
+| `D` | Yank parent directory                                         |
+| `o` | Open with the OS default handler                              |
+| `q` | Send marked entries (or the current one) to the quickfix list |
+
+### Configuration
+
+Every keybinding is data and can be overridden; set a value to `false` to
+unbind. See [`lua/loupe/config.lua`](./lua/loupe/config.lua) for the full set of
+actions and options.
+
+```lua
+require("loupe").setup({
+	default_source = "files",
+	trash = true,          -- delete via the OS trash when available
+	frecency = true,       -- order the empty-query list by use
+	git = true,            -- show git status markers
+	backends = {
+		files = { "fd", "rg", "git" },
+		grep = { "rg", "git" },
+	},
+	mappings = {
+		browse = { ["<CR>"] = "split" },
+		menu = { ["m"] = "rename" },
+		sources = { ["t"] = "changed" },
+	},
+})
 ```
-init.lua            entry point: module wiring
-nvim-pack-lock.json pinned plugin revisions
-after/plugin/       per-plugin config (blink, gitsigns, kanagawa, neo-tree, …)
-lua/
-├── keymaps.lua     global keymaps
-├── settings.lua    options
-├── util.lua        map() helper
-├── util/           process wrapper (proc)
-├── keyd.lua        keymap-reveal helper
-├── statusline.lua  statusline
-├── tabline.lua     buffer tabline
-├── notify.lua      ui2 message routing
-├── builtins.lua    undo tree, :Gdiff, yank flash
-├── tagged.lua      tag close/rename helpers
-├── format.lua      format-on-save via external binaries
-├── filetypes.lua   per-filetype defaults (indent, detection)
-├── loupe/          bottom fuzzy picker (sources) + full-screen live preview
-├── lsp/            LSP core (loader, keys) + features (info, pickers, hints)
-├── ui/             UI helpers (theme, float, hl, status, buf, win, preview) + diagnostic float
-└── plugins/
-    └── treesitter.lua  parsers + textobjects setup
-lsp/                declarative server configs — one file per LSP (data only)
-tests/              pure headless unit tests
-```
 
-### Adding an LSP server
+## LSP
 
-Drop a data-only file into `lsp/`, restart:
+Servers live in [`lsp/`](./lsp) as data-only files — one per server. They are
+registered and enabled automatically on startup.
+
+### Adding a server
+
+Drop in a file and restart:
 
 ```lua
 -- lsp/gopls.lua
@@ -70,36 +214,42 @@ return {
 }
 ```
 
-It's registered and enabled automatically. Shared defaults (completion capabilities) live in `lua/lsp/setup.lua`; set `enabled = false` in a file to keep it loaded but inactive.
+Shared defaults (completion capabilities, etc.) live in
+[`lua/lsp/setup.lua`](./lua/lsp/setup.lua). Set `enabled = false` in a server
+file to keep it loaded but inactive.
 
-## Keymaps (selection)
+## Layout
 
-| Key           | Action                    |
-| ------------- | ------------------------- |
-| `<C-p>`       | Find files                |
-| `<leader>fw`  | Live grep                 |
-| `<C-n>`       | Toggle file explorer      |
-| `H` / `L`     | Previous / next buffer    |
-| `<leader>x`   | Close buffer              |
-| `<leader>li`  | LSP info                  |
-| `<leader>ss`  | LSP symbols (document)    |
-| `<leader>sw`  | LSP workspace symbols     |
-| `<C-h/j/k/l>` | Navigate windows          |
-
-Inside Loupe (`<C-p>`): `<CR>` open, `<C-s>`/`<C-v>`/`<C-t>` open in split/vsplit/tab, `<C-o>` source menu (`f` files, `d` dirs, `b` buffers, `r` recent, `c` changed, `g` live grep, `s` workspace symbols), `<C-x>` action prefix (`r` rename/move, `d` delete to trash, `a` add file (trailing `/` makes a dir), `c` duplicate, `y` yank path, `Y`/`n`/`D` yank relative/name/dir, `o` open externally, `q` send to quickfix), `<Tab>` mark (marks feed quickfix), `<C-r>` jump to project root, `<BS>` on an empty query goes up a directory, `<Left>`/`<Right>` (or `<C-b>`/`<C-f>`) move the query caret, `<Home>`/`<End>` (or `<C-a>`/`<C-e>`) jump, `<BS>`/`<Del>`/`<C-w>` edit, `<C-d>`/`<C-u>` page, mouse click/double-click/wheel. `grep` and `symbols` are live: each keystroke re-queries (debounced), and the preview jumps to the match.
-
-Bindings are data, not code. Override any of them (in `browse`, `menu`, `sources`, or `prompt`) via `setup`, e.g. `require("loupe").setup({ mappings = { browse = { ["<CR>"] = "split" } } })`; set a value to `false` to unbind. See `lua/loupe/config.lua` for the full action set.
+```
+.
+├── init.lua                 module wiring
+├── nvim-pack-lock.json      pinned plugin revisions
+├── after/plugin/            per-plugin setup (blink, gitsigns, kanagawa, neo-tree, …)
+├── lsp/                     declarative server configs, one file per server
+├── tests/                   headless unit tests
+└── lua/
+    ├── keymaps.lua          global keymaps
+    ├── settings.lua         options
+    ├── plugins/             vim.pack declarations + Treesitter
+    ├── lsp/                 loader, shared defaults, keymaps, features
+    ├── loupe/               the fuzzy finder
+    │   ├── backend/         enumeration/search backends (fd, rg, git, nvim, lsp)
+    │   └── source/          picker modes (files, dirs, buffers, recent, changed, grep, symbols)
+    ├── ui/                  theme, float, highlights, status, buffer/window helpers, preview
+    └── util/                process wrapper, text field, debounce
+```
 
 ## Health & tests
 
-`:checkhealth loupe` reports external tools (`fd`/`rg`/`git`), the resolved enumeration backends and matcher, and the resolved project root.
+`:checkhealth loupe` reports external tools (`fd`/`rg`/`git`), the resolved
+enumeration backends and matcher, and the project root.
 
-Pure unit tests (no plugins) run headlessly and in CI:
+The pure unit tests need no plugins and run headlessly (also in CI):
 
 ```sh
 nvim --headless -u tests/minimal_init.lua -l tests/run.lua
 ```
 
-# License
+## License
 
 [MIT](./LICENSE)
