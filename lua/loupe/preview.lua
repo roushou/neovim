@@ -19,9 +19,19 @@ local M = {}
 local P = { win = nil, buf = nil, path = nil }
 
 local hl_ns = vim.api.nvim_create_namespace("loupe_preview_hl")
+local diag_ns = vim.api.nvim_create_namespace("loupe_preview_diag")
 
 vim.api.nvim_set_hl(0, "LoupePreviewLine", { link = "CursorLine", default = true })
 vim.api.nvim_set_hl(0, "LoupePreviewMatch", { link = "Search", default = true })
+
+-- Diagnostics presentation, keyed by |vim.diagnostic.severity|.
+local SEV_NAME = { [1] = "Error", [2] = "Warn", [3] = "Info", [4] = "Hint" }
+local SEV_GLYPH = {
+	[1] = "\u{f057}",
+	[2] = "\u{f071}",
+	[3] = "\u{f05a}",
+	[4] = "\u{f0eb}",
+}
 
 --- Rows occupied by the tabline (showtabline=2, or 1 with multiple tabs).
 local function tabline_rows()
@@ -90,6 +100,104 @@ local function highlight(lnum, col, col_end)
 				priority = 200,
 			})
 		end
+	end
+end
+
+--- Resolve the real buffer for a path, if it is loaded/open.
+local function real_bufnr(path)
+	local b = vim.fn.bufnr(path)
+	if b ~= -1 and vim.api.nvim_buf_is_valid(b) then
+		return b
+	end
+	for _, cand in ipairs(vim.api.nvim_list_bufs()) do
+		if vim.api.nvim_buf_is_valid(cand) and vim.api.nvim_buf_get_name(cand) == path then
+			return cand
+		end
+	end
+end
+
+local function one_line(msg)
+	msg = (msg or ""):gsub("%s+", " ")
+	if #msg > 100 then
+		msg = msg:sub(1, 99) .. "…"
+	end
+	return msg
+end
+
+local function clear_diagnostics()
+	if P.buf and vim.api.nvim_buf_is_valid(P.buf) then
+		vim.api.nvim_buf_clear_namespace(P.buf, diag_ns, 0, -1)
+	end
+end
+
+--- Re-emit the previewed file's real diagnostics onto the scratch buffer:
+--- undercurls on each range, a sign (when the window has a sign column) and a
+--- one-line end-of-line message per affected line.
+local function render_diagnostics(path)
+	clear_diagnostics()
+	if not (P.buf and vim.api.nvim_buf_is_valid(P.buf)) then
+		return
+	end
+	local buf = real_bufnr(path)
+	if not buf then
+		return
+	end
+	local diags = vim.diagnostic.get(buf)
+	if #diags == 0 then
+		return
+	end
+
+	local count = vim.api.nvim_buf_line_count(P.buf)
+	local by_line = {}
+	for _, d in ipairs(diags) do
+		local row = d.lnum
+		if row and row >= 0 and row < count then
+			local sev = d.severity or 1
+			local text = vim.api.nvim_buf_get_lines(P.buf, row, row + 1, false)[1] or ""
+			local from = math.max(0, math.min(d.col or 0, #text))
+			local to = (d.end_lnum == d.lnum) and math.min(d.end_col or #text, #text) or #text
+			if to <= from then
+				to = #text
+			end
+			local entry = by_line[row]
+			if not entry then
+				entry = { count = 0, sev = sev, message = d.message, ranges = {} }
+				by_line[row] = entry
+			end
+			entry.count = entry.count + 1
+			if sev < entry.sev then
+				entry.sev = sev
+				entry.message = d.message
+			end
+			entry.ranges[#entry.ranges + 1] = { from, to, "DiagnosticUnderline" .. (SEV_NAME[sev] or "Error") }
+		end
+	end
+
+	for row, entry in pairs(by_line) do
+		local name = SEV_NAME[entry.sev] or "Error"
+		local glyph = SEV_GLYPH[entry.sev] or SEV_GLYPH[1]
+		for _, r in ipairs(entry.ranges) do
+			vim.api.nvim_buf_set_extmark(P.buf, diag_ns, row, r[1], {
+				end_col = r[2],
+				hl_group = r[3],
+				priority = 100,
+			})
+		end
+		vim.api.nvim_buf_set_extmark(P.buf, diag_ns, row, 0, {
+			sign_text = glyph,
+			sign_hl_group = "DiagnosticSign" .. name,
+			priority = 100,
+		})
+		local msg = one_line(entry.message)
+		if entry.count > 1 then
+			msg = msg .. ("  +%d"):format(entry.count - 1)
+		end
+		vim.api.nvim_buf_set_extmark(P.buf, diag_ns, row, 0, {
+			virt_text = { { glyph .. " " .. msg, "DiagnosticVirtualText" .. name } },
+			virt_text_pos = "eol",
+			hl_mode = "combine",
+			priority = 300,
+		})
 	end
 end
 
@@ -176,11 +284,17 @@ function M.show(path, opts)
 
 	local lnum = opts.lnum or 1
 	local col = opts.col or 0
+	local with_diag = opts.diagnostics ~= false
 
 	-- Same file already rendered: reposition without re-reading it.
 	if path == P.path then
 		position(lnum, col)
 		highlight(opts.lnum, opts.col, opts.col_end)
+		if with_diag then
+			render_diagnostics(path)
+		else
+			clear_diagnostics()
+		end
 		return
 	end
 	P.path = path
@@ -190,6 +304,7 @@ function M.show(path, opts)
 		set_lines({ "-binary file-" })
 		position(1, 0)
 		highlight(nil)
+		clear_diagnostics()
 		return
 	end
 
@@ -198,6 +313,7 @@ function M.show(path, opts)
 		set_lines({ "-cannot read file-" })
 		position(1, 0)
 		highlight(nil)
+		clear_diagnostics()
 		return
 	end
 	if truncated then
@@ -212,6 +328,11 @@ function M.show(path, opts)
 	end
 	position(lnum, col)
 	highlight(opts.lnum, opts.col, opts.col_end)
+	if with_diag then
+		render_diagnostics(path)
+	else
+		clear_diagnostics()
+	end
 end
 
 --- Current topline of the preview (nil when closed).

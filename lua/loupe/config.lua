@@ -48,6 +48,9 @@ M.defaults = {
 		enabled = true,
 		--- Read at most this many lines into the preview buffer.
 		max_lines = 2000,
+		--- Re-emit the previewed file's diagnostics (undercurls, signs, and an
+		--- end-of-line message) on the preview scratch buffer.
+		diagnostics = true,
 	},
 
 	--- Show a per-filetype glyph before each entry.

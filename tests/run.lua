@@ -13,6 +13,7 @@ for _, spec in ipairs({
 	"tests.spec_loupe_parse",
 	"tests.spec_loupe_nvim",
 	"tests.spec_loupe_locations",
+	"tests.spec_loupe_preview",
 	"tests.spec_loupe_source",
 	"tests.spec_loupe_icons",
 	"tests.spec_loupe_keymap",

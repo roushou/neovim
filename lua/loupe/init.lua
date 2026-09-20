@@ -109,6 +109,7 @@ local function update_preview()
 		preview.ensure_open(S.drawer_win, S.preview_opts)
 		preview.show(item.cand.abs, {
 			max_lines = cfg.preview.max_lines,
+			diagnostics = cfg.preview.diagnostics,
 			lnum = item.cand.lnum,
 			col = item.cand.col,
 			col_end = item.cand.col_end,
