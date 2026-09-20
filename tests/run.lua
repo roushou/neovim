@@ -9,7 +9,7 @@ for _, spec in ipairs({
 	"tests.spec_util_textfield",
 	"tests.spec_util_debounce",
 	"tests.spec_primitives",
-	"tests.spec_ui_preview",
+	"tests.spec_util_file",
 	"tests.spec_loupe_backend",
 	"tests.spec_loupe_parse",
 	"tests.spec_loupe_nvim",

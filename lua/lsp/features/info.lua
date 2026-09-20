@@ -17,6 +17,7 @@ local map = require("util").map
 local float = require("ui.float")
 local hl = require("ui.hl")
 local win = require("ui.win")
+local msg = require("ui.msg")
 
 local M = {}
 
@@ -246,7 +247,7 @@ end
 local function action_restart()
 	local row = row_at_cursor()
 	if not row then
-		vim.notify("No server on this line", vim.log.levels.WARN)
+		msg.warn("No server on this line")
 		return
 	end
 	local restarted = false
@@ -260,7 +261,7 @@ local function action_restart()
 		if row.config then
 			vim.lsp.enable(row.name) -- (re)starts on matching buffers
 		else
-			vim.notify(row.name .. ": no running client to restart", vim.log.levels.WARN)
+			msg.warn(row.name .. ": no running client to restart")
 			return
 		end
 	end
@@ -270,7 +271,7 @@ end
 local function action_stop()
 	local row = row_at_cursor()
 	if not row then
-		vim.notify("No server on this line", vim.log.levels.WARN)
+		msg.warn("No server on this line")
 		return
 	end
 	local stopped = 0
@@ -281,7 +282,7 @@ local function action_stop()
 		end
 	end
 	if stopped == 0 then
-		vim.notify(row.name .. ": no running client", vim.log.levels.WARN)
+		msg.warn(row.name .. ": no running client")
 	end
 	refresh()
 end
@@ -289,15 +290,15 @@ end
 local function action_enable()
 	local row = row_at_cursor()
 	if not row then
-		vim.notify("No server on this line", vim.log.levels.WARN)
+		msg.warn("No server on this line")
 		return
 	end
 	if not row.config then
-		vim.notify(row.name .. " has no vim.lsp.config entry (started externally)", vim.log.levels.WARN)
+		msg.warn(row.name .. " has no vim.lsp.config entry (started externally)")
 		return
 	end
 	if vim.lsp.is_enabled(row.name) then
-		vim.notify(row.name .. " already enabled — starts on matching files", vim.log.levels.INFO)
+		msg.info(row.name .. " already enabled — starts on matching files")
 	else
 		vim.lsp.enable(row.name)
 	end
@@ -307,11 +308,11 @@ end
 local function action_disable()
 	local row = row_at_cursor()
 	if not row then
-		vim.notify("No server on this line", vim.log.levels.WARN)
+		msg.warn("No server on this line")
 		return
 	end
 	if not row.config then
-		vim.notify(row.name .. " has no vim.lsp.config entry (started externally)", vim.log.levels.WARN)
+		msg.warn(row.name .. " has no vim.lsp.config entry (started externally)")
 		return
 	end
 	vim.lsp.enable(row.name, false) -- stops clients + removes from enabled
@@ -325,7 +326,7 @@ local function action_jump()
 	end
 	local buffers = row.buffers or {}
 	if #buffers == 0 then
-		vim.notify(row.name .. ": no attached buffers", vim.log.levels.INFO)
+		msg.info(row.name .. ": no attached buffers")
 		return
 	end
 	close()

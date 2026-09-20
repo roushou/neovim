@@ -10,7 +10,7 @@
 --- mirrors the editor's gutter/wrap options, so buffer tabs stay visible and
 --- line numbers line up with regular windows.
 
-local preview = require("ui.preview")
+local file = require("util.file")
 local buf = require("ui.buf")
 local win = require("ui.win")
 local hl = require("ui.hl")
@@ -281,7 +281,7 @@ function M.show(path, opts)
 	P.path = path
 	local max_lines = opts.max_lines or 2000
 
-	if preview.is_text(path) == false then
+	if file.is_text(path) == false then
 		set_lines({ "-binary file-" })
 		position(1, 0)
 		highlight(nil)
@@ -289,7 +289,7 @@ function M.show(path, opts)
 		return
 	end
 
-	local lines, _, truncated = preview.read(path, max_lines)
+	local lines, _, truncated = file.read(path, max_lines)
 	if not lines then
 		set_lines({ "-cannot read file-" })
 		position(1, 0)
@@ -304,8 +304,8 @@ function M.show(path, opts)
 
 	set_lines(lines)
 
-	if preview.should_highlight(P.buf) then
-		preview.highlight(P.buf, vim.filetype.match({ filename = path }) or "")
+	if file.should_highlight(P.buf) then
+		file.highlight(P.buf, vim.filetype.match({ filename = path }) or "")
 	end
 	position(lnum, col)
 	highlight(opts.lnum, opts.col, opts.col_end)

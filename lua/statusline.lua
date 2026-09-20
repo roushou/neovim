@@ -16,6 +16,7 @@
 
 local theme = require("ui.theme")
 local status = require("ui.status")
+local surface = require("ui.surface")
 
 -- mode -> { label, anchor group, printable name (for hl group names) }
 local MODE = {
@@ -94,8 +95,7 @@ local function active()
 end
 
 -- Return value is re-evaluated as a statusline format string (via %{%...%}).
--- Exposed as globals so the v:lua references in 'statusline' can call them.
-function _G.StatuslineMode()
+local function mode_segment()
 	if not active() then
 		return ""
 	end
@@ -164,8 +164,8 @@ local function rec_section()
 	return status.segment("StatusLineRecording", " ● @" .. reg)
 end
 
-function _G.StatuslineLeft()
-	local parts = { _G.StatuslineMode() }
+local function left_str()
+	local parts = { mode_segment() }
 	local ft = ft_section()
 	if ft ~= "" then
 		parts[#parts + 1] = ft
@@ -203,7 +203,7 @@ local function lsp_section()
 	return status.click("StatusLineLsp", label, "StatuslineLspClick")
 end
 
-function _G.StatuslineLspClick(...)
+local function lsp_click(...)
 	local button = select(3, ...)
 	if button ~= "l" then
 		return
@@ -213,7 +213,7 @@ function _G.StatuslineLspClick(...)
 	end)
 end
 
-function _G.StatuslineRight()
+local function right_str()
 	local parts = {}
 	local l = lsp_section()
 	if l ~= "" then
@@ -239,10 +239,12 @@ vim.o.showmode = false
 -- Compose with the 0.12 default: prepend left sections, splice the right
 -- sections just before the ruler. If the default ever changes shape (the
 -- ruler fragment no longer matches), fall back to appending at the very end.
+local left = surface.expr("StatuslineLeft", left_str)
+local right = surface.expr("StatuslineRight", right_str)
+surface.clickable("StatuslineLspClick", lsp_click)
+
 local default = vim.o.statusline
 local RULER = "%{% &ruler ? ( &rulerformat == '' ? '%-14.(%l,%c%V%) %P' : &rulerformat ) : '' %}"
-local left = "%{%v:lua.StatuslineLeft()%}"
-local right = "%{%v:lua.StatuslineRight()%}"
 local start, finish = default:find(RULER, 1, true)
 if start then
 	vim.o.statusline = left .. default:sub(1, start - 1) .. right .. default:sub(start)

@@ -13,6 +13,8 @@
 local theme = require("ui.theme")
 local status = require("ui.status")
 local util = require("util")
+local msg = require("ui.msg")
+local surface = require("ui.surface")
 
 local M = {}
 
@@ -135,7 +137,7 @@ function M.click(bufnr, _, button)
 		vim.api.nvim_set_current_buf(bufnr)
 	elseif button == "m" then
 		if vim.bo[bufnr].modified then
-			vim.notify("Buffer modified", vim.log.levels.WARN)
+			msg.warn("Buffer modified")
 		elseif vim.fn.buflisted(bufnr) == 1 then
 			vim.api.nvim_buf_delete(bufnr, {})
 		end
@@ -165,23 +167,14 @@ function M.cycle(dir)
 	vim.cmd.buffer(buffers[next_idx])
 end
 
--- globals referenced by the 'tabline' expression and click labels.
--- Click labels (%N@Func@) resolve a VIMSCRIPT function name, so a thin
--- wrapper forwards to the Lua handler.
-_G.TablineRender = M.render
-_G.TablineClick = M.click
-vim.fn.execute([[
-	function! TablineClick(minwid, clicks, button, modifiers) abort
-		return v:lua.require('tabline').click(a:minwid, a:clicks, a:button, a:modifiers)
-	endfunction
-]])
-
--- required for click labels (%N@Func@) to receive mouse events at all
+-- 'tabline' expression + click handler. The mouse option is required for
+-- click labels to receive events at all.
 if vim.o.mouse == "" then
 	vim.o.mouse = "a"
 end
 vim.o.showtabline = 2
-vim.o.tabline = "%{%v:lua.TablineRender()%}"
+vim.o.tabline = surface.expr("TablineRender", M.render)
+surface.clickable("TablineClick", M.click)
 
 -- redraw when the buffer list / names / modified state can change
 vim.api.nvim_create_autocmd({ "BufAdd", "BufDelete", "BufEnter", "BufWipeout", "BufFilePost" }, {

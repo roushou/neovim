@@ -8,6 +8,7 @@ local M = {}
 
 local proc = require("util.proc")
 local util = require("util")
+local msg = require("ui.msg")
 
 local FORMATTERS = {
 	lua = { { cmd = { "stylua", "-" } } },
@@ -50,7 +51,7 @@ function M.run(lines, filetype)
 		return lines
 	end)
 	if not ok then
-		vim.notify(result, vim.log.levels.WARN, { title = "format" })
+		msg.warn(result, { title = "format" })
 		return
 	end
 	return result

@@ -2,6 +2,7 @@ local status = require("ui.status")
 local map = require("util").map
 local proc = require("util.proc")
 local buf = require("ui.buf")
+local notify = require("ui.msg").scoped("Gdiff")
 
 -- 0.12 built-in undo tree.
 vim.cmd("packadd nvim.undotree")
@@ -38,19 +39,19 @@ map("n", "<leader>gd", "<cmd>Gdiff<cr>", { desc = "Diff current file vs HEAD" })
 vim.api.nvim_create_user_command("Gdiff", function()
 	local rel = vim.fn.expand("%:~:.")
 	if rel == "" then
-		vim.notify("Gdiff: no file name", vim.log.levels.WARN)
+		notify.warn("no file name")
 		return
 	end
 	-- git show resolves paths from the repo root, so prepend the cwd prefix.
 	local prefix, perr = proc.sync({ "git", "rev-parse", "--show-prefix" })
 	if not prefix then
-		vim.notify("Gdiff: " .. (perr or "not a git repository"), vim.log.levels.ERROR)
+		notify.error(perr or "not a git repository")
 		return
 	end
 	local repo_path = vim.trim(prefix) .. rel
 	local out, oerr = proc.sync({ "git", "show", "HEAD:" .. repo_path })
 	if not out then
-		vim.notify("Gdiff: " .. (oerr or "git show failed"), vim.log.levels.ERROR)
+		notify.error(oerr or "git show failed")
 		return
 	end
 

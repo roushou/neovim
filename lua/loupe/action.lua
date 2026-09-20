@@ -5,12 +5,9 @@
 --- for a plain mutation), and nil/false when nothing changed.
 
 local config = require("loupe.config")
+local notify = require("ui.msg").scoped("loupe")
 
 local M = {}
-
-local function notify(msg, level)
-	vim.notify("loupe: " .. msg, level or vim.log.levels.INFO)
-end
 
 local function parent(path)
 	return vim.fn.fnamemodify(path, ":h")

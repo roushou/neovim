@@ -1,4 +1,4 @@
---- File-preview primitives shared by the LSP pickers and loupe.
+--- File reading + highlighting helpers for previews.
 ---
 --- Pure: built-in APIs only (|vim.uv|, |vim.fn.readfile()|, treesitter, native
 --- syntax). Never sets 'filetype', so no |FileType| autocmds (LSP attach,
