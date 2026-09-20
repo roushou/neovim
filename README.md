@@ -61,57 +61,57 @@ update them.
 
 ### Files & search
 
-| Key          | Action                              |
-| ------------ | ----------------------------------- |
-| `<C-p>`      | Loupe — fuzzy finder (see below)    |
-| `<leader>fw` | Live grep (`mini.pick`)             |
-| `<C-n>`      | Toggle file explorer (neo-tree)     |
+| Key          | Action                           |
+| ------------ | -------------------------------- |
+| `<C-p>`      | Loupe — fuzzy finder (see below) |
+| `<leader>fw` | Live grep (`mini.pick`)          |
+| `<C-n>`      | Toggle file explorer (neo-tree)  |
 
 ### Buffers & windows
 
-| Key                   | Action                  |
-| --------------------- | ----------------------- |
-| `<C-h>` `<C-j>` `<C-k>` `<C-l>` | Move between windows |
-| `H` / `L`             | Previous / next buffer  |
-| `<leader>x`           | Close buffer            |
-| `<leader>w` / `<leader>q` | Save / quit         |
+| Key                             | Action                 |
+| ------------------------------- | ---------------------- |
+| `<C-h>` `<C-j>` `<C-k>` `<C-l>` | Move between windows   |
+| `H` / `L`                       | Previous / next buffer |
+| `<leader>x`                     | Close buffer           |
+| `<leader>w` / `<leader>q`       | Save / quit            |
 
 ### LSP & diagnostics
 
-| Key                     | Action                          |
-| ----------------------- | ------------------------------- |
-| `<leader>li`            | LSP info                        |
-| `<leader>ss`            | Document symbols                |
-| `<leader>sw`            | Workspace symbols               |
-| `gd`                    | LSP definitions (Trouble)       |
-| `<leader>tt`            | Toggle Trouble                  |
+| Key                         | Action                           |
+| --------------------------- | -------------------------------- |
+| `<leader>li`                | LSP info                         |
+| `<leader>ss`                | Document symbols                 |
+| `<leader>sw`                | Workspace symbols                |
+| `gd`                        | LSP definitions (Trouble)        |
+| `<leader>tt`                | Toggle Trouble                   |
 | `<leader>td` / `<leader>tw` | Document / workspace diagnostics |
-| `<leader>tq` / `<leader>tl` | Quickfix / location list    |
-| `[c`                    | Go to Treesitter context        |
+| `<leader>tq` / `<leader>tl` | Quickfix / location list         |
+| `[c`                        | Go to Treesitter context         |
 
 ### Git
 
-| Key           | Action                    |
-| ------------- | ------------------------- |
-| `<leader>gg`  | LazyGit                   |
-| `<leader>gv`  | Toggle Diffview           |
-| `g[` / `g]`   | Previous / next hunk      |
-| `<leader>gp`  | Preview hunk inline       |
-| `<leader>gd`  | Diff this                 |
+| Key          | Action               |
+| ------------ | -------------------- |
+| `<leader>gg` | LazyGit              |
+| `<leader>gv` | Toggle Diffview      |
+| `g[` / `g]`  | Previous / next hunk |
+| `<leader>gp` | Preview hunk inline  |
+| `<leader>gd` | Diff this            |
 
 ### Editing
 
-| Key                           | Action                        |
-| ----------------------------- | ----------------------------- |
-| `jj` / `jk` (insert)          | Escape                        |
-| `j` / `k`                     | Soft down / up                |
-| `<` / `>` (visual)            | Indent, keep selection        |
-| `<leader>y` / `<leader>p` (visual) | Yank / paste clipboard    |
+| Key                                | Action                 |
+| ---------------------------------- | ---------------------- |
+| `jj` / `jk` (insert)               | Escape                 |
+| `j` / `k`                          | Soft down / up         |
+| `<` / `>` (visual)                 | Indent, keep selection |
+| `<leader>y` / `<leader>p` (visual) | Yank / paste clipboard |
 
 ## Loupe
 
 Loupe (`<C-p>`) is a bottom-docked fuzzy finder with a full-viewport live
-preview. It is **source-based**: the source menu changes *what* is being
+preview. It is **source-based**: the source menu changes _what_ is being
 searched, while matching, previewing, and actions stay the same. Browsing never
 opens a file buffer — files are read into a scratch buffer, and only the choose
 actions create real buffers.
@@ -122,36 +122,36 @@ Public API: `require("loupe").open()`, `.close()`, `.toggle()`, `.setup(opts)`.
 
 Open the source menu with `<C-o>`.
 
-| Key | Source        | Backend            | Notes                                  |
-| --- | ------------- | ------------------ | -------------------------------------- |
-| `f` | Files         | `fd` → `rg` → `git`| Project files, gitignore-aware         |
-| `d` | Directories   | `fd`               | `<CR>` descends into the directory     |
-| `b` | Buffers       | builtin            | Reuses the loaded buffer, unsaved edits intact |
-| `r` | Recent        | frecency store     | Most-frequently / recently opened      |
-| `c` | Changed       | `git status`       | Staged, unstaged, and untracked        |
-| `g` | Grep          | `rg` → `git grep`  | Live content search                    |
-| `s` | Symbols       | LSP                | Workspace symbols                      |
+| Key | Source      | Backend             | Notes                                          |
+| --- | ----------- | ------------------- | ---------------------------------------------- |
+| `f` | Files       | `fd` → `rg` → `git` | Project files, gitignore-aware                 |
+| `d` | Directories | `fd`                | `<CR>` descends into the directory             |
+| `b` | Buffers     | builtin             | Reuses the loaded buffer, unsaved edits intact |
+| `r` | Recent      | frecency store      | Most-frequently / recently opened              |
+| `c` | Changed     | `git status`        | Staged, unstaged, and untracked                |
+| `g` | Grep        | `rg` → `git grep`   | Live content search                            |
+| `s` | Symbols     | LSP                 | Workspace symbols                              |
 
 `grep` and `symbols` are **live**: each keystroke re-queries the backend
 (debounced), and the preview jumps to the match.
 
 ### Browsing
 
-| Key                              | Action                                    |
-| -------------------------------- | ----------------------------------------- |
-| `<CR>`                           | Open                                      |
-| `<C-s>` / `<C-v>` / `<C-t>`      | Open in split / vsplit / tab              |
-| `<C-o>`                          | Source menu                               |
-| `<C-x>`                          | Action menu (see below)                   |
-| `<C-r>`                          | Jump back to the project root             |
-| `<Tab>`                          | Mark entry (marks feed `quickfix`)        |
-| `<C-p>` `<Up>` / `<C-n>` `<Down>`| Move up / down                            |
-| `<C-d>` / `<C-u>`                | Page down / up                            |
-| `<Left>` `<C-b>` / `<Right>` `<C-f>` | Move the query caret                  |
-| `<Home>` `<C-a>` / `<End>` `<C-e>` | Jump to start / end of the query        |
-| `<BS>` / `<Del>` / `<C-w>`       | Delete character / word                   |
-| `<Esc>` / `<C-c>`                | Close                                     |
-| Mouse                            | Click to select, double-click to open, wheel to scroll |
+| Key                                  | Action                                                 |
+| ------------------------------------ | ------------------------------------------------------ |
+| `<CR>`                               | Open                                                   |
+| `<C-s>` / `<C-v>` / `<C-t>`          | Open in split / vsplit / tab                           |
+| `<C-o>`                              | Source menu                                            |
+| `<C-x>`                              | Action menu (see below)                                |
+| `<C-r>`                              | Jump back to the project root                          |
+| `<Tab>`                              | Mark entry (marks feed `quickfix`)                     |
+| `<C-p>` `<Up>` / `<C-n>` `<Down>`    | Move up / down                                         |
+| `<C-d>` / `<C-u>`                    | Page down / up                                         |
+| `<Left>` `<C-b>` / `<Right>` `<C-f>` | Move the query caret                                   |
+| `<Home>` `<C-a>` / `<End>` `<C-e>`   | Jump to start / end of the query                       |
+| `<BS>` / `<Del>` / `<C-w>`           | Delete character / word                                |
+| `<Esc>` / `<C-c>`                    | Close                                                  |
+| Mouse                                | Click to select, double-click to open, wheel to scroll |
 
 <kbd>Backspace</kbd> on an empty query walks **up one directory**.
 
