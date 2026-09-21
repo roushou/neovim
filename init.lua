@@ -20,7 +20,7 @@ require("lsp").setup()
 require("keymaps").setup()
 require("filetypes").setup()
 require("builtins").setup()
-require("tagged").setup()
+require("twin").setup()
 require("format").attach()
 
 -- 6. UI surfaces and diagnostic float behaviour.

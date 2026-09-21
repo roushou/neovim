@@ -49,6 +49,9 @@ vim.pack.add({
 	-- Picker
 	{ src = gh("roushou/loupe.nvim"), name = "loupe.nvim", version = vim.version.range("*") },
 
+	-- Tags
+	{ src = gh("roushou/twin.nvim"), name = "twin.nvim", version = vim.version.range("*") },
+
 	-- Search & replace
 	{ src = gh("nvim-pack/nvim-spectre"), name = "nvim-spectre" },
 

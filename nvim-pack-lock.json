@@ -92,6 +92,11 @@
     "trouble.nvim": {
       "rev": "bd67efe408d4816e25e8491cc5ad4088e708a69a",
       "src": "https://github.com/folke/trouble.nvim"
+    },
+    "twin.nvim": {
+      "rev": "9eb36298d0d9b72c91ee016a29e696bef21bd1dc",
+      "src": "https://github.com/roushou/twin.nvim",
+      "version": ">=0.0.0"
     }
   }
 }
