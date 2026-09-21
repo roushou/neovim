@@ -41,6 +41,11 @@
       "rev": "a04ad0dbc725134edbee3a5eea29290976695357",
       "src": "https://github.com/kdheepak/lazygit.nvim"
     },
+    "loupe.nvim": {
+      "rev": "0cf272df0fdddba7827262ebd207127255dfd032",
+      "src": "https://github.com/roushou/loupe.nvim",
+      "version": ">=0.0.0"
+    },
     "mini.nvim": {
       "rev": "a995fe9cd4193fb492b5df69175a351a74b3d36b",
       "src": "https://github.com/echasnovski/mini.nvim",

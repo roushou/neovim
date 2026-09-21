@@ -10,15 +10,6 @@ for _, spec in ipairs({
 	"tests.spec_util_debounce",
 	"tests.spec_primitives",
 	"tests.spec_util_file",
-	"tests.spec_loupe_backend",
-	"tests.spec_loupe_parse",
-	"tests.spec_loupe_nvim",
-	"tests.spec_loupe_locations",
-	"tests.spec_loupe_preview",
-	"tests.spec_loupe_source",
-	"tests.spec_loupe_icons",
-	"tests.spec_loupe_keymap",
-	"tests.spec_loupe_action",
 }) do
 	require(spec)
 end

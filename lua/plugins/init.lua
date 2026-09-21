@@ -46,6 +46,9 @@ vim.pack.add({
 	{ src = gh("sindrets/diffview.nvim"), name = "diffview.nvim" },
 	{ src = gh("kdheepak/lazygit.nvim"), name = "lazygit.nvim" },
 
+	-- Picker
+	{ src = gh("roushou/loupe.nvim"), name = "loupe.nvim", version = vim.version.range("*") },
+
 	-- Search & replace
 	{ src = gh("nvim-pack/nvim-spectre"), name = "nvim-spectre" },
 

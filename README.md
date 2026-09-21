@@ -237,12 +237,11 @@ file to keep it loaded but inactive.
     ├── settings.lua         options
     ├── plugins/             vim.pack declarations + Treesitter
     ├── lsp/                 loader, shared defaults, keymaps, features
-    ├── loupe/               the fuzzy finder
-    │   ├── backend/         enumeration/search backends (fd, rg, git, nvim, lsp)
-    │   └── source/          picker modes (files, dirs, buffers, recent, changed, grep, symbols, doc symbols, diagnostics)
     ├── ui/                  theme, msg, surface, float, highlights, status, buffer/window helpers
     └── util/                process wrapper, file read, text field, debounce
 ```
+
+[Loupe](https://github.com/roushou/loupe.nvim) - the fuzzy finder.
 
 ## Health & tests
 
