@@ -42,7 +42,7 @@
       "src": "https://github.com/kdheepak/lazygit.nvim"
     },
     "loupe.nvim": {
-      "rev": "ddf0b9c7c1284556980c0b2835c7fd2c2fad8042",
+      "rev": "2224decd375c4b030c68f629665288fe653b6a45",
       "src": "https://github.com/roushou/loupe.nvim",
       "version": ">=0.0.0"
     },
