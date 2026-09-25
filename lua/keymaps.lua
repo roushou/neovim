@@ -33,6 +33,9 @@ function M.setup()
 	end, { desc = "Next buffer" })
 	map("n", "<leader>x", "<cmd>lua MiniBufremove.delete()<cr>", { desc = "Close buffer" })
 
+	-- Plugins
+	map("n", "<leader>pi", "<cmd>Packo<cr>", { desc = "Plugin dashboard" })
+
 	-- LSP
 	map("n", "<leader>li", "<cmd>LspInfo<cr>", { desc = "LSP info" })
 	map("n", "<leader>ss", function()

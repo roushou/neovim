@@ -28,7 +28,8 @@ formatter, and a handful of quality-of-life helpers.
 - **Declarative LSP** — one data-only file per server in `lsp/`, registered
   automatically; shared capabilities live in `lua/lsp/setup.lua`.
 - **Built-in plugin management** — declared with `vim.pack.add()` and pinned in
-  `nvim-pack-lock.json`; no bootstrapping plugin.
+  `nvim-pack-lock.json`; no bootstrapping plugin. `:Packo` (`<leader>pi`) is a
+  read-only dashboard of installed / active / drifted plugins.
 - **Hand-rolled UI** — statusline, buffer tabline, diagnostics float, and a
   keymap-reveal helper rather than a full distribution.
 
@@ -75,6 +76,23 @@ update them.
 | `H` / `L`                       | Previous / next buffer |
 | `<leader>x`                     | Close buffer           |
 | `<leader>w` / `<leader>q`       | Save / quit            |
+
+### Plugins
+
+| Key          | Action                        |
+| ------------ | ----------------------------- |
+| `<leader>pi` | Plugin dashboard (`:Packo`)   |
+
+`:Packo` is read-only: it lists every plugin `vim.pack` manages, marks it
+active / inactive / missing, and checks the on-disk `HEAD` against the lockfile
+revision. Update status needs a fetch, so `u` / `U` hand off to
+`:vim.pack.update()` (one / all) rather than reimplementing it.
+
+Packo is written as a self-contained plugin — `lua/packo/` plus a
+[`plugin/packo.lua`](./plugin/packo.lua) command stub, no config-local
+dependencies — so it can be extracted into its own repository unchanged. Public
+API: `require("packo").setup/open/close/toggle/is_active`. See
+[`lua/packo/config.lua`](./lua/packo/config.lua) for options.
 
 ### LSP & diagnostics
 
@@ -230,12 +248,14 @@ file to keep it loaded but inactive.
 ├── init.lua                 module wiring
 ├── nvim-pack-lock.json      pinned plugin revisions
 ├── after/plugin/            per-plugin setup (blink, gitsigns, kanagawa, neo-tree, …)
+├── plugin/                  auto-loaded command stubs (packo)
 ├── lsp/                     declarative server configs, one file per server
 ├── tests/                   headless unit tests
 └── lua/
     ├── keymaps.lua          global keymaps
     ├── settings.lua         options
     ├── plugins/             vim.pack declarations + Treesitter
+    ├── packo/               plugin dashboard (self-contained, extractable)
     ├── lsp/                 loader, shared defaults, keymaps, features
     ├── ui/                  theme, msg, surface, float, highlights, status, buffer/window helpers
     └── util/                process wrapper, file read, text field, debounce

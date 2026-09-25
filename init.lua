@@ -23,10 +23,11 @@ require("builtins").setup()
 require("twin").setup()
 require("format").attach()
 
--- 6. UI surfaces and diagnostic float behaviour.
+-- 6. UI surfaces, diagnostic float behaviour, and the plugin dashboard.
 require("statusline").setup()
 require("tabline").setup()
 require("ui.diag_float").setup()
+require("packo").setup()
 
 -- 7. Keymap reveal (installs buffer-local triggers).
 require("keyd").setup()
