@@ -89,6 +89,10 @@
       "rev": "75990ecbcaccae5cfb77fb847a7bfa0b925b858d",
       "src": "https://github.com/keith/swift.vim"
     },
+    "tabline.nvim": {
+      "rev": "38cfe012846567e65ac70bf63ba6d8878c582a17",
+      "src": "https://github.com/roushou/tabline.nvim"
+    },
     "trouble.nvim": {
       "rev": "bd67efe408d4816e25e8491cc5ad4088e708a69a",
       "src": "https://github.com/folke/trouble.nvim"

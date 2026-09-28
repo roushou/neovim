@@ -17,4 +17,5 @@ opt.wrap = true
 opt.linebreak = true
 opt.winborder = "single"
 opt.laststatus = 3
+opt.mouse = "a" -- Clickable tabline labels; plugins leave mouse policy to us.
 -- opt.cmdheight = 0

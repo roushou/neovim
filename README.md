@@ -2,8 +2,9 @@
 
 My personal Neovim configuration. Plugin management uses the built-in
 `vim.pack`, LSP servers are declared as data-only files, and the rest is
-hand-rolled: a source-based fuzzy finder (**Loupe**), statusline, tabline,
-formatter, and a handful of quality-of-life helpers.
+custom-built: a source-based fuzzy finder (**Loupe**), statusline, buffer tabline,
+formatter, and a handful of quality-of-life helpers. Loupe, paired-tag editing
+(**twin.nvim**), and the buffer tabline (**tabline.nvim**) are standalone plugins.
 
 ![Editor with Kanagawa colorscheme showing a Rust file with custom statusline and buffer tabline](https://github.com/user-attachments/assets/25e34511-4c41-41bd-96cd-e6eb477e057e)
 
@@ -55,6 +56,10 @@ built-in `vim.pack.add()` and pinned in
 [`nvim-pack-lock.json`](./nvim-pack-lock.json). Run `:vim.pack.update()` to
 update them.
 
+The buffer tabline uses [tabline.nvim](https://github.com/roushou/tabline.nvim),
+installed through `vim.pack` and pinned in the lockfile. See `:help tabline.nvim`
+for configuration. `H` / `L` cycle through buffers.
+
 ## Keymaps
 
 `<leader>` is <kbd>Space</kbd>. This is a selection; the full set lives in
@@ -65,7 +70,7 @@ update them.
 | Key          | Action                           |
 | ------------ | -------------------------------- |
 | `<C-p>`      | Loupe — fuzzy finder (see below) |
-| `<leader>fw` | Live grep (Loupe)          |
+| `<leader>fw` | Live grep (Loupe)                |
 | `<C-n>`      | Toggle file explorer (neo-tree)  |
 
 ### Buffers & windows
@@ -79,9 +84,9 @@ update them.
 
 ### Plugins
 
-| Key          | Action                        |
-| ------------ | ----------------------------- |
-| `<leader>pi` | Plugin dashboard (`:Packo`)   |
+| Key          | Action                      |
+| ------------ | --------------------------- |
+| `<leader>pi` | Plugin dashboard (`:Packo`) |
 
 `:Packo` is read-only: it lists every plugin `vim.pack` manages, marks it
 active / inactive / missing, and checks the on-disk `HEAD` against the lockfile

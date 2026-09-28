@@ -37,6 +37,7 @@ vim.pack.add({
 	{ src = gh("nvim-treesitter/nvim-treesitter-context"), name = "nvim-treesitter-context" },
 
 	-- UI
+	{ src = gh("roushou/tabline.nvim"), name = "tabline.nvim" },
 	{ src = gh("nvim-neo-tree/neo-tree.nvim"), name = "neo-tree.nvim", version = "v3.x" },
 	{ src = gh("nvim-lua/plenary.nvim"), name = "plenary.nvim" },
 	{ src = gh("MunifTanjim/nui.nvim"), name = "nui.nvim" },
