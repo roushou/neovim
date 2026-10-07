@@ -42,6 +42,16 @@ function M.info(row)
 	return nil
 end
 
+--- Remove a plugin from disk (and from the lockfile) via |vim.pack.del()|.
+--- Active plugins are refused by `vim.pack` itself; it errors with the
+--- "remove it from init.lua and restart" guidance, which the caller surfaces.
+--- @param row table
+--- @return boolean ok, string? err
+function M.del(row)
+	local ok, err = pcall(vim.pack.del, { row.name })
+	return ok, ok and nil or tostring(err)
+end
+
 --- Compare the plugin's on-disk HEAD against its lockfile revision, then call
 --- `done()`. Runs asynchronously, one shell per plugin, in parallel.
 --- @param row table

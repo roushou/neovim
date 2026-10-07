@@ -34,7 +34,8 @@ M.defaults = {
 	},
 
 	--- Buffer-local keymaps. A value may be a string, a list of strings, or
-	--- `false` to unbind.
+	--- `false` to unbind. `delete` only applies to rows inactive this session,
+	--- since `vim.pack` refuses to delete active plugins.
 	keymaps = {
 		close = { "q", "<Esc>" },
 		detail = { "<CR>" },
@@ -43,6 +44,7 @@ M.defaults = {
 		yank_src = { "Y" },
 		update = { "u" },
 		update_all = { "U" },
+		delete = { "d" },
 		refresh = { "R" },
 	},
 }

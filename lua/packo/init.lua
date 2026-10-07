@@ -1,9 +1,9 @@
---- Packo: a read-only dashboard for |vim.pack|.
+--- Packo: a dashboard for |vim.pack|.
 ---
 --- Shows every plugin vim.pack manages, its state (active / inactive /
 --- missing), and whether its on-disk revision drifted from the lockfile. It
---- never updates or deletes anything; the `u`/`U` actions hand off to
---- |vim.pack.update()|.
+--- changes nothing itself; the `u`/`U` actions hand off to |vim.pack.update()|
+--- and `d` to |vim.pack.del()|.
 ---
 --- Public API:
 ---   require("packo").setup(opts)

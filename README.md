@@ -30,7 +30,8 @@ formatter, and a handful of quality-of-life helpers. Loupe, paired-tag editing
   automatically; shared capabilities live in `lua/lsp/setup.lua`.
 - **Built-in plugin management** — declared with `vim.pack.add()` and pinned in
   `nvim-pack-lock.json`; no bootstrapping plugin. `:Packo` (`<leader>pi`) is a
-  read-only dashboard of installed / active / drifted plugins.
+  dashboard of installed / active / drifted plugins that hands updates and
+  deletions off to `vim.pack`.
 - **Hand-rolled UI** — statusline, buffer tabline, diagnostics float, and a
   keymap-reveal helper rather than a full distribution.
 
@@ -88,10 +89,13 @@ for configuration. `H` / `L` cycle through buffers.
 | ------------ | --------------------------- |
 | `<leader>pi` | Plugin dashboard (`:Packo`) |
 
-`:Packo` is read-only: it lists every plugin `vim.pack` manages, marks it
-active / inactive / missing, and checks the on-disk `HEAD` against the lockfile
-revision. Update status needs a fetch, so `u` / `U` hand off to
-`:vim.pack.update()` (one / all) rather than reimplementing it.
+`:Packo` is read-only about the filesystem: it lists every plugin `vim.pack`
+manages, marks it active / inactive / missing, and checks the on-disk `HEAD`
+against the lockfile revision. Actions that change state hand off to `vim.pack`
+rather than being reimplemented — `u` / `U` to `:vim.pack.update()` (one /
+all), `d` to `vim.pack.del()` (one). `vim.pack` refuses to delete a plugin that
+is active this session, so deleting is a teardown of leftovers: drop the plugin
+from `lua/plugins/init.lua`, restart, then press `d` on its inactive row.
 
 Packo is written as a self-contained plugin — `lua/packo/` plus a
 [`plugin/packo.lua`](./plugin/packo.lua) command stub, no config-local

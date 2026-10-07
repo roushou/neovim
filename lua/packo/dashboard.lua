@@ -1,8 +1,8 @@
---- Packo dashboard: the read-only plugin window.
+--- Packo dashboard: the plugin window.
 ---
 --- Owns the float, the row rendering, the on-demand detail view, and the
---- hand-off to |vim.pack.update()|. It never writes to the lockfile or the
---- plugin directory itself.
+--- hand-offs to |vim.pack.update()| and |vim.pack.del()|. It never writes to
+--- the lockfile or the plugin directory itself.
 
 local config = require("packo.config")
 local float = require("packo.float")
@@ -161,11 +161,12 @@ function M.render()
 	)
 	local hdr = string.format("%d plugins · %s", #rows, short_path(plug_dir(), o.width - 16))
 	local footer = string.format(
-		"%s details · %s source · %s/%s update · %s path · %s refresh · %s close",
+		"%s details · %s source · %s/%s update · %s delete · %s path · %s refresh · %s close",
 		(table.concat(keys(o.keymaps.detail), " ")),
 		(table.concat(keys(o.keymaps.source), " ")),
 		(table.concat(keys(o.keymaps.update), " ")),
 		(table.concat(keys(o.keymaps.update_all), " ")),
+		(table.concat(keys(o.keymaps.delete), " ")),
 		(table.concat(keys(o.keymaps.yank_path), " ")),
 		(table.concat(keys(o.keymaps.refresh), " ")),
 		(table.concat(keys(o.keymaps.close), " "))
@@ -338,6 +339,37 @@ local function action_update(all)
 	vim.pack.update(all and nil or { row.name })
 end
 
+--- Hand off to |vim.pack.del()|, which removes the directory and its lockfile
+--- entry. `vim.pack` refuses plugins that are active in this session, so the
+--- only deletable rows are the leftover (inactive / missing) ones; an active
+--- row reports the required two-step flow instead. There is no native
+--- confirmation buffer for deletes, so confirm here.
+local function action_delete()
+	local row = row_at_cursor()
+	if not row then
+		notify("No plugin on this line", vim.log.levels.WARN)
+		return
+	end
+	if row.active then
+		notify(
+			("%s is active — drop it from init.lua and restart, then delete it here"):format(row.name),
+			vim.log.levels.WARN
+		)
+		return
+	end
+	local prompt = ("Delete plugin '%s'?\nIts directory and lockfile entry are removed."):format(row.name)
+	if vim.fn.confirm(prompt, "&Delete\n&Cancel", 2) ~= 1 then
+		return
+	end
+	local ok, err = pack.del(row)
+	if not ok then
+		notify(err, vim.log.levels.ERROR)
+		return
+	end
+	notify(("Removed %s"):format(row.name))
+	M.refresh()
+end
+
 local function setup_keymaps(buf)
 	local o = opts()
 	local function set(spec, rhs, desc)
@@ -360,6 +392,7 @@ local function setup_keymaps(buf)
 	set(o.keymaps.update_all, function()
 		action_update(true)
 	end, "Update all plugins")
+	set(o.keymaps.delete, action_delete, "Delete plugin")
 	set(o.keymaps.refresh, M.refresh, "Refresh")
 end
 
